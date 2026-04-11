@@ -1,0 +1,334 @@
+import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../api/axios';
+import NotificationCenter from '../../components/NotificationCenter';
+import ModuleCard from '../../components/ModuleCard';
+import ClassView from './ClassView';
+import Chat from '../communication/Chat';
+import QRScanner from '../../components/QRScanner';
+
+const TutorDashboard = () => {
+    const { user, logout } = useAuth();
+    const [view, setView] = useState('dashboard'); // 'dashboard', 'class', 'timetable', 'chat'
+    const [modules, setModules] = useState([]);
+    const [selectedModule, setSelectedModule] = useState(null); // { subject, grade }
+    const [timetableData, setTimetableData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Today's Sessions State
+    const [todaySessions, setTodaySessions] = useState([]);
+    const [showScanner, setShowScanner] = useState(false);
+    const [scanningSessionId, setScanningSessionId] = useState(null);
+
+    useEffect(() => {
+        fetchModules();
+        fetchTimetable();
+        fetchTodaySessions();
+    }, []);
+
+    const fetchModules = async () => {
+        try {
+            const res = await api.get('/attendance/teacher/classes');
+            setModules(res.data);
+            setLoading(false);
+        } catch (err) {
+            console.error(err);
+            setLoading(false);
+        }
+    };
+
+    const fetchTimetable = async () => {
+        try {
+            const res = await api.get('/academic/timetable/teacher');
+            setTimetableData(res.data);
+        } catch (err) {
+            console.error("Failed to fetch timetable", err);
+        }
+    };
+
+    const fetchTodaySessions = async () => {
+        try {
+            const res = await api.get('/attendance/teacher/sessions');
+            // Filter for TODAY locally (server returns >= today)
+            const today = new Date().toDateString();
+            const sessionsToday = res.data.filter(s => new Date(s.Date).toDateString() === today);
+            setTodaySessions(sessionsToday);
+        } catch (err) {
+            console.error("Failed to fetch sessions", err);
+        }
+    };
+
+    const handleSelectGrade = (mod) => {
+        setSelectedModule(mod);
+        setView('class');
+    };
+
+    // Chat Navigation State
+    const [chatInitialContact, setChatInitialContact] = useState(null);
+
+    const handleNavigateToChat = (contact) => {
+        setChatInitialContact(contact);
+        setView('chat');
+    };
+
+    const handleBack = () => {
+        setSelectedModule(null);
+        setView('dashboard');
+        fetchTodaySessions(); // Refresh when returning
+    };
+
+    // QR Scanning Logic
+    const handleScanClick = (sessionId) => {
+        setScanningSessionId(sessionId);
+        setShowScanner(true);
+    };
+
+    const handleScan = async (decodedText) => {
+        if (!scanningSessionId) {
+            toast.error("Error: No session selected.");
+            return;
+        }
+        // Find session details to get SubjectID
+        const session = todaySessions.find(s => s.SessionID === scanningSessionId);
+        if (!session) return toast.error("Session not found context");
+
+        try {
+            const res = await api.post('/attendance/mark', {
+                studentId: decodedText,
+                subjectId: session.SubjectID,
+                sessionId: scanningSessionId,
+                status: 'Present'
+            });
+            toast.success(`Attendance Marked for ${res.data.studentName}!`);
+        } catch (err) {
+            console.log("Scan error", err);
+            toast.error("Failed to mark attendance: " + (err.response?.data?.message || err.message));
+        }
+    };
+
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        fetchUnreadCount();
+        const interval = setInterval(fetchUnreadCount, 10000); // Poll every 10s
+        return () => clearInterval(interval);
+    }, []);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const res = await api.get('/communication/unread-count');
+            setUnreadCount(res.data.count);
+        } catch (err) { console.error(err); }
+    };
+
+    // Change Password State
+    const [passData, setPassData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    const [passMessage, setPassMessage] = useState('');
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
+        if (passData.newPassword !== passData.confirmPassword) {
+            setPassMessage("New passwords do not match.");
+            return;
+        }
+        try {
+            await api.post('/auth/change-password', {
+                currentPassword: passData.currentPassword,
+                newPassword: passData.newPassword
+            });
+            setPassMessage("Password updated successfully!");
+            setPassData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        } catch (err) {
+            setPassMessage(err.response?.data?.message || "Error updating password.");
+        }
+    };
+
+    return (
+        <div className="min-h-screen p-4 md:p-8 transition-colors duration-300 bg-slate-50">
+            <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in-up">
+                {/* Global Header */}
+                <div className="glass-card p-4 md:p-6 flex flex-row justify-between items-center bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg relative overflow-hidden rounded-2xl">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="relative z-10 min-w-0">
+                        <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate">Tutor Dashboard</h1>
+                        <p className="text-cyan-100 mt-0.5 text-sm truncate">Welcome back, {user?.name}</p>
+                    </div>
+                    <div className="flex items-center gap-2 md:gap-4 relative z-10 flex-shrink-0 ml-3">
+                        <NotificationCenter />
+                        <button onClick={() => setView('settings')} className="hidden sm:block px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl transition font-medium backdrop-blur-sm text-sm">
+                            Settings
+                        </button>
+                        <button onClick={logout} className="px-3 md:px-6 py-2 md:py-2.5 bg-white text-cyan-700 hover:bg-cyan-50 border border-transparent rounded-xl transition font-bold shadow-sm text-sm">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+
+                {/* Sub Navigation */}
+                {view !== 'class' && view !== 'settings' && (
+                    <div className="flex space-x-4 border-b border-slate-200 pb-2 overflow-x-auto">
+                        <button
+                            onClick={() => setView('dashboard')}
+                            className={`px-4 py-2 font-medium transition ${view === 'dashboard' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
+                        >
+                            My Classes
+                        </button>
+                        <button
+                            onClick={() => setView('timetable')}
+                            className={`px-4 py-2 font-medium transition ${view === 'timetable' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
+                        >
+                            Time Table
+                        </button>
+                        <button
+                            onClick={() => { setChatInitialContact(null); setView('chat'); }}
+                            className={`px-4 py-2 font-medium transition flex items-center gap-2 ${view === 'chat' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
+                        >
+                            Messages
+                            {unreadCount > 0 && (
+                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse shadow-md">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+                )}
+
+                {view === 'settings' ? (
+                    <div className="glass-card p-8 max-w-md mx-auto bg-white border border-slate-200 shadow-sm">
+                        <h2 className="text-2xl font-bold text-slate-900 mb-6">Change Password</h2>
+                        {passMessage && <p className={`mb-4 p-3 rounded ${passMessage.includes('success') ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>{passMessage}</p>}
+                        <form onSubmit={handleChangePassword} className="space-y-4">
+                            <div>
+                                <label className="block text-slate-600 mb-1">Current Password</label>
+                                <input
+                                    type="password"
+                                    className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 outline-none transition"
+                                    value={passData.currentPassword}
+                                    onChange={e => setPassData({ ...passData, currentPassword: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-slate-600 mb-1">New Password</label>
+                                <input
+                                    type="password"
+                                    className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 outline-none transition"
+                                    value={passData.newPassword}
+                                    onChange={e => setPassData({ ...passData, newPassword: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-slate-600 mb-1">Confirm New Password</label>
+                                <input
+                                    type="password"
+                                    className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 focus:border-blue-500 outline-none transition"
+                                    value={passData.confirmPassword}
+                                    onChange={e => setPassData({ ...passData, confirmPassword: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="flex gap-4 pt-4">
+                                <button type="button" onClick={() => setView('dashboard')} className="flex-1 py-3 text-slate-500 hover:text-slate-900 transition">Cancel</button>
+                                <button type="submit" className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-lg transition">Update</button>
+                            </div>
+                        </form>
+                    </div>
+                ) : view === 'chat' ? <Chat initialContact={chatInitialContact} onMessageRead={fetchUnreadCount} /> : view === 'dashboard' ? (
+                    <>
+                        {/* Today's Sessions Section */}
+                        {todaySessions.length > 0 && (
+                            <div className="mb-8">
+                                <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                    <span className="w-2 h-8 bg-blue-600 rounded-full"></span>
+                                    Today's Sessions <span className="text-sm font-normal text-slate-500 ml-2">({new Date().toLocaleDateString()})</span>
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {todaySessions.map(sess => (
+                                        <div key={sess.SessionID} className="p-5 bg-white rounded-2xl border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 transition group relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <div className="flex justify-between items-start mb-3 relative z-10">
+                                                <div>
+                                                    <h3 className="font-bold text-slate-900 text-lg">{sess.SubjectName}</h3>
+                                                    <span className="text-xs font-mono bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100 font-semibold mt-1 inline-block">Grade {sess.Grade}</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-blue-600 font-bold">{sess.StartTime.slice(0, 5)}</div>
+                                                    <div className="text-xs text-slate-400">{sess.EndTime.slice(0, 5)}</div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => handleScanClick(sess.SessionID)}
+                                                className="w-full mt-2 py-3 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 border border-blue-200 hover:border-blue-600 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 transition-all duration-300 group-hover:translate-y-0"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+                                                Scan Attendance
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {loading ? <p className="text-slate-500">Loading modules...</p> : (
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 mb-4">My Classes</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {modules.map((mod, idx) => (
+                                        <ModuleCard
+                                            key={idx}
+                                            title={`${mod.SubjectName} - Grade ${mod.Grade}`} // Combined Title
+                                            description={`${mod.StudentCount || 0} Students`}
+                                            color="from-blue-600 to-indigo-600"
+                                            onClick={() => handleSelectGrade(mod)}
+                                        />
+                                    ))}
+                                    {modules.length === 0 && (
+                                        <p className="text-slate-400 col-span-full text-center py-10">
+                                            No classes assigned yet.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </>
+                ) : view === 'timetable' ? (
+                    <div className="glass-card p-6 bg-white border border-slate-200 shadow-sm">
+                        <h2 className="text-xl font-bold text-slate-900 mb-4">My Weekly Schedule</h2>
+                        <div className="space-y-4">
+                            {timetableData.length === 0 ? <p className="text-slate-400">No scheduled classes.</p> : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {timetableData.map(t => (
+                                        <div key={t.TimetableID} className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-400 transition hover:shadow-sm">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-blue-600 font-bold">{t.DayOfWeek}</span>
+                                                <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded border border-blue-200">{t.Grade}</span>
+                                            </div>
+                                            <h3 className="text-lg font-semibold text-slate-900">{t.SubjectName}</h3>
+                                            <p className="text-sm text-slate-500 mt-1">
+                                                {t.StartTime.slice(0, 5)} - {t.EndTime.slice(0, 5)}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <ClassView
+                        subject={selectedModule}
+                        grade={selectedModule.Grade}
+                        onBack={handleBack}
+                        onNavigateToChat={handleNavigateToChat}
+                    />
+                )}
+            </div>
+
+            {showScanner && <QRScanner onScanPromise={handleScan} onClose={() => setShowScanner(false)} />}
+        </div>
+    );
+}
+
+export default TutorDashboard;
