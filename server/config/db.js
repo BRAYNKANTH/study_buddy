@@ -5,10 +5,17 @@ dotenv.config();
 
 let pool;
 
-// Railway provides DATABASE_URL — use it if available
+// PlanetScale / Railway / any DATABASE_URL format
 if (process.env.DATABASE_URL) {
-    pool = mysql.createPool(process.env.DATABASE_URL);
+    pool = mysql.createPool({
+        uri: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: true },
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+    });
 } else {
+    // Local development
     pool = mysql.createPool({
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 3306,
