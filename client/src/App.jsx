@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Menu, X } from 'lucide-react';
@@ -20,6 +21,22 @@ import aboutImg from './assets/about_us.png';
 function LandingPage() {
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const contactFormRef = useRef(null);
+
+    const handleContactSubmit = (e) => {
+        e.preventDefault();
+        const data = new FormData(e.target);
+        const name = data.get('name')?.trim();
+        const email = data.get('email')?.trim();
+        const message = data.get('message')?.trim();
+        if (!name || !email || !message) {
+            toast.error('Please fill in all fields.');
+            return;
+        }
+        // Show success — in production wire this to an email API
+        toast.success("Message sent! We'll get back to you soon.");
+        e.target.reset();
+    };
 
     const scrollTo = (id) => {
         const element = document.getElementById(id);
@@ -61,7 +78,7 @@ function LandingPage() {
 
                 {/* Mobile Menu Dropdown */}
                 {isMenuOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden md:hidden flex flex-col p-4 space-y-4 animate-fade-in-up uppercase">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden md:hidden flex flex-col p-4 space-y-4 animate-fade-in-up">
                         <button onClick={() => { scrollTo('hero'); setIsMenuOpen(false); }} className="text-left px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition">Home</button>
                         <button onClick={() => { scrollTo('about'); setIsMenuOpen(false); }} className="text-left px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition">About Us</button>
                         <button onClick={() => { scrollTo('contact'); setIsMenuOpen(false); }} className="text-left px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition">Contact</button>
@@ -164,20 +181,20 @@ function LandingPage() {
 
                     {/* Contact Form */}
                     <div className="glass-card p-8 bg-slate-50">
-                        <form className="space-y-4">
+                        <form onSubmit={handleContactSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Your Name</label>
-                                <input type="text" className="w-full px-4 py-3 glass-input outline-none rounded-xl" placeholder="John Doe" />
+                                <input name="name" type="text" className="w-full px-4 py-3 glass-input outline-none rounded-xl" placeholder="John Doe" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                                <input type="email" className="w-full px-4 py-3 glass-input outline-none rounded-xl" placeholder="john@example.com" />
+                                <input name="email" type="email" className="w-full px-4 py-3 glass-input outline-none rounded-xl" placeholder="john@example.com" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
-                                <textarea rows="4" className="w-full px-4 py-3 glass-input outline-none rounded-xl resize-none" placeholder="How can we help you?"></textarea>
+                                <textarea name="message" rows="4" className="w-full px-4 py-3 glass-input outline-none rounded-xl resize-none" placeholder="How can we help you?"></textarea>
                             </div>
-                            <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition">
+                            <button type="submit" className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition">
                                 Send Message
                             </button>
                         </form>

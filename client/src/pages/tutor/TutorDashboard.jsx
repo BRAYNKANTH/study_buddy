@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
-import NotificationCenter from '../../components/NotificationCenter';
+import PageHeader from '../../components/PageHeader';
 import ModuleCard from '../../components/ModuleCard';
+import SkeletonCard from '../../components/SkeletonCard';
 import ClassView from './ClassView';
 import Chat from '../communication/Chat';
 import QRScanner from '../../components/QRScanner';
@@ -148,22 +149,12 @@ const TutorDashboard = () => {
         <div className="min-h-screen p-4 md:p-8 transition-colors duration-300 bg-slate-50">
             <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in-up">
                 {/* Global Header */}
-                <div className="glass-card p-4 md:p-6 flex flex-row justify-between items-center bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg relative overflow-hidden rounded-2xl">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
-                    <div className="relative z-10 min-w-0">
-                        <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate">Tutor Dashboard</h1>
-                        <p className="text-cyan-100 mt-0.5 text-sm truncate">Welcome back, {user?.name}</p>
-                    </div>
-                    <div className="flex items-center gap-2 md:gap-4 relative z-10 flex-shrink-0 ml-3">
-                        <NotificationCenter />
-                        <button onClick={() => setView('settings')} className="hidden sm:block px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl transition font-medium backdrop-blur-sm text-sm">
-                            Settings
-                        </button>
-                        <button onClick={logout} className="px-3 md:px-6 py-2 md:py-2.5 bg-white text-cyan-700 hover:bg-cyan-50 border border-transparent rounded-xl transition font-bold shadow-sm text-sm">
-                            Logout
-                        </button>
-                    </div>
-                </div>
+                <PageHeader
+                    title="Tutor Dashboard"
+                    subtitle={`Welcome back, ${user?.name}`}
+                    onLogout={logout}
+                    onSettings={() => setView('settings')}
+                />
 
                 {/* Sub Navigation */}
                 {view !== 'class' && view !== 'settings' && (
@@ -272,7 +263,14 @@ const TutorDashboard = () => {
                             </div>
                         )}
 
-                        {loading ? <p className="text-slate-500">Loading modules...</p> : (
+                        {loading ? (
+                            <div>
+                                <div className="skeleton h-6 w-32 rounded mb-4" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <SkeletonCard count={3} height="h-40" />
+                                </div>
+                            </div>
+                        ) : (
                             <div>
                                 <h2 className="text-xl font-bold text-slate-900 mb-4">My Classes</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

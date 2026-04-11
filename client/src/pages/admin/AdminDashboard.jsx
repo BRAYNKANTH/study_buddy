@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import TutorManagement from './TutorManagement';
 import StudentManagement from './StudentManagement';
 import SubjectManagement from './SubjectManagement';
+import PageHeader from '../../components/PageHeader';
 import api from '../../api/axios';
 
 const AdminDashboard = () => {
@@ -168,19 +169,11 @@ const AdminDashboard = () => {
         <div className="min-h-screen p-8 transition-colors duration-300 bg-slate-50">
             <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
                 {/* Header */}
-                <div className="glass-card p-4 md:p-6 flex flex-row justify-between items-center bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg relative overflow-hidden rounded-2xl">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
-                    <div className="relative z-10 min-w-0">
-                        <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate">Admin Dashboard</h1>
-                        <p className="text-cyan-100 mt-0.5 text-sm truncate">Welcome, {user?.name}</p>
-                    </div>
-                    <button
-                        onClick={logout}
-                        className="flex-shrink-0 ml-3 px-3 md:px-6 py-2 md:py-2.5 bg-white text-cyan-700 border border-white/20 hover:bg-cyan-50 rounded-xl transition font-bold shadow-sm text-sm"
-                    >
-                        Logout
-                    </button>
-                </div>
+                <PageHeader
+                    title="Admin Dashboard"
+                    subtitle={`Welcome, ${user?.name}`}
+                    onLogout={logout}
+                />
 
                 {/* Tabs */}
                 <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">

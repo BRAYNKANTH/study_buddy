@@ -6,8 +6,8 @@ import html2canvas from 'html2canvas';
 import QRGenerator from '../../components/QRGenerator';
 import StudentIDCard from '../../components/StudentIDCard';
 import AnnouncementBoard from '../../components/AnnouncementBoard';
-import NotificationCenter from '../../components/NotificationCenter';
-
+import PageHeader from '../../components/PageHeader';
+import SkeletonCard from '../../components/SkeletonCard';
 import ChildDashboard from './ChildDashboard';
 import Chat from '../communication/Chat';
 
@@ -227,17 +227,11 @@ const ParentDashboard = () => {
                 ) : (
                     <>
                         {/* Header */}
-                        <div className="glass-card p-4 md:p-6 flex flex-row justify-between items-center bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-lg relative overflow-hidden rounded-2xl">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
-                            <div className="relative z-10 min-w-0">
-                                <h1 className="text-xl md:text-3xl font-bold tracking-tight truncate">Parent Portal</h1>
-                                <p className="text-cyan-100 mt-0.5 text-sm truncate">Welcome back, {user?.name}</p>
-                            </div>
-                            <div className="flex items-center gap-2 md:gap-4 relative z-10 flex-shrink-0 ml-3">
-                                <NotificationCenter />
-                                <button onClick={logout} className="px-3 md:px-6 py-2 md:py-2.5 bg-white text-cyan-700 border border-white/20 hover:bg-cyan-50 rounded-xl transition font-bold shadow-sm text-sm">Logout</button>
-                            </div>
-                        </div>
+                        <PageHeader
+                            title="Parent Portal"
+                            subtitle={`Welcome back, ${user?.name}`}
+                            onLogout={logout}
+                        />
 
                         {/* Navigation */}
                         {/* Navigation Menu */}

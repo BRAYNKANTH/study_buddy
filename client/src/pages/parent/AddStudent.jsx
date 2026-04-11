@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import api from '../../api/axios';
+import { useAuth } from '../../context/AuthContext';
 
 const AddStudent = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
 
@@ -63,10 +66,10 @@ const AddStudent = () => {
                 "amount": amountFormatted, // MUST match the hashed amount string exactly
                 "currency": currency,
                 "hash": hash,
-                "first_name": "Parent",
-                "last_name": "User",
-                "email": "parent@example.com",
-                "phone": "0771234567",
+                "first_name": user?.name?.split(' ')[0] || "Parent",
+                "last_name": user?.name?.split(' ').slice(1).join(' ') || "User",
+                "email": user?.email || "parent@example.com",
+                "phone": user?.phone || "0771234567",
                 "address": "No.1, Galle Road",
                 "city": "Colombo",
                 "country": "Sri Lanka"
@@ -84,7 +87,7 @@ const AddStudent = () => {
                     setPaymentSuccess(true);
                 } catch (e) {
                     console.error(e);
-                    alert("Payment Verified locally but API update failed. Please contact admin.");
+                    toast.error("Payment verified locally but API update failed. Please contact admin.");
                     navigate('/parent/dashboard');
                 }
             };
@@ -95,12 +98,12 @@ const AddStudent = () => {
 
             window.payhere.onError = function onError(error) {
                 console.log("Error:" + error);
-                alert("Payment Error: " + error);
+                toast.error("Payment Error: " + error);
             };
 
         } catch (err) {
             console.error(err);
-            alert("Failed to initiate payment");
+            toast.error("Failed to initiate payment");
         }
     };
 
@@ -145,21 +148,21 @@ const AddStudent = () => {
             setPaymentDetails(res.data);
             setStep(3); // Move to Payment
         } catch (err) {
-            alert(err.response?.data?.message || "Registration failed");
+            toast.error(err.response?.data?.message || "Registration failed");
         } finally {
             setLoading(false);
         }
     };
 
     const handlePaymentSubmit = async () => {
-        if (!refNo) return alert("Please enter a reference number or upload receipt");
+        if (!refNo) return toast.error("Please enter a reference number");
         try {
             await api.put(`/payments/${paymentDetails.paymentId}/reference`, { referenceNo: refNo });
-            alert("Registration Complete! Enrollment pending approval.");
+            toast.success("Registration complete! Enrollment pending approval.");
             navigate('/parent/dashboard');
         } catch (err) {
             console.error(err);
-            alert("Registration Complete! Please contact admin for approval.");
+            toast.success("Registration complete! Please contact admin for approval.");
             navigate('/parent/dashboard');
         }
     };
@@ -175,7 +178,7 @@ const AddStudent = () => {
             link.click();
         } catch (err) {
             console.error("Receipt download failed", err);
-            alert("Could not download receipt automatically. Please verify browser permissions.");
+            toast.error("Could not download receipt. Please check browser permissions.");
         }
     };
 
@@ -308,7 +311,7 @@ Jaffna, Sri Lanka</p>
                             <button
                                 onClick={() => {
                                     if (formData.StudentName && formData.Grade) setStep(2);
-                                    else alert("Please fill details");
+                                    else toast.error("Please fill in student name and grade");
                                 }}
                                 className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition shadow-md"
                             >
