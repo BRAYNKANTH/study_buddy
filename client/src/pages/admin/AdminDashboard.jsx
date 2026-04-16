@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 import TutorManagement from './TutorManagement';
 import StudentManagement from './StudentManagement';
 import SubjectManagement from './SubjectManagement';
@@ -98,10 +99,10 @@ const AdminDashboard = () => {
                 startTime: scheduleStart,
                 endTime: scheduleEnd
             });
-            alert("Class Scheduled Successfully!");
+            toast.success("Class scheduled successfully!");
             fetchSessions(); // Refresh list
         } catch (err) {
-            alert("Error scheduling class");
+            toast.error("Error scheduling class");
         }
     };
 
@@ -116,19 +117,19 @@ const AdminDashboard = () => {
                 startTime: ttStart,
                 endTime: ttEnd
             });
-            alert("Timetable Updated!");
+            toast.success("Timetable updated!");
             fetchTimetable();
         } catch (err) {
-            alert("Error updating timetable");
+            toast.error("Error updating timetable");
         }
     };
 
     const handleDeleteTimetable = async (id) => {
-        if (!confirm("Are you sure you want to remove this slot?")) return;
         try {
             await api.delete(`/academic/timetable/${id}`);
+            toast.success("Timetable slot removed");
             fetchTimetable();
-        } catch (err) { alert("Error deleting slot"); }
+        } catch (err) { toast.error("Error deleting slot"); }
     };
 
     const fetchPayments = async () => {
@@ -143,10 +144,10 @@ const AdminDashboard = () => {
     const handleVerify = async (id, status) => {
         try {
             await api.put('/payments/verify', { paymentId: id, status });
-            alert(`Payment ${status}`);
+            toast.success(`Payment ${status.toLowerCase()}`);
             fetchPayments(); // Refresh
         } catch (err) {
-            alert("Error updating payment");
+            toast.error("Error updating payment");
         }
     };
 
@@ -160,9 +161,9 @@ const AdminDashboard = () => {
                 targetAudience: annTarget,
                 grade: annGrade
             });
-            alert("Announcement Posted");
+            toast.success("Announcement posted!");
             setAnnTitle(''); setAnnContent(''); setAnnTarget('All'); setAnnGrade('All');
-        } catch (err) { alert("Error posting announcement"); }
+        } catch (err) { toast.error("Error posting announcement"); }
     };
 
     return (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import api from '../../api/axios';
 
 const StudentManagement = () => {
@@ -55,11 +56,11 @@ const StudentManagement = () => {
         e.preventDefault();
         try {
             await api.post('/users/students', formData);
-            alert("Student added successfully!");
+            toast.success("Student added successfully!");
             setFormData({ StudentID: '', ParentID: '', StudentName: '', Grade: '', QRCode: '' });
             fetchStudents();
         } catch (err) {
-            alert("Error adding student: " + (err.response?.data?.message || err.message));
+            toast.error("Error adding student: " + (err.response?.data?.message || err.message));
         }
     };
 
@@ -77,7 +78,7 @@ const StudentManagement = () => {
                 await api.delete(`/users/student/${selectedStudentId}`);
                 setDeleteModalOpen(false);
                 fetchStudents();
-                alert("Student deleted successfully.");
+                toast.success("Student deleted successfully.");
             } else {
                 setVerifyError("Incorrect password");
             }

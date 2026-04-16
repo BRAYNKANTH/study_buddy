@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import api from '../../api/axios';
 
 const SubjectManagement = () => {
@@ -54,11 +55,11 @@ const SubjectManagement = () => {
         e.preventDefault();
         try {
             await api.post('/academic/subjects', formData);
-            alert("Subject added successfully!");
+            toast.success("Subject added successfully!");
             setFormData({ subjectName: '', fee: '', medium: 'Tamil', grades: [] });
             fetchSubjects();
         } catch (err) {
-            alert("Error adding subject: " + (err.response?.data?.message || err.message));
+            toast.error("Error adding subject: " + (err.response?.data?.message || err.message));
         }
     };
 
@@ -77,7 +78,7 @@ const SubjectManagement = () => {
                 await api.delete(`/academic/subjects/${selectedSubjectId}`);
                 setDeleteModalOpen(false);
                 fetchSubjects();
-                alert("Subject deleted successfully.");
+                toast.success("Subject deleted successfully.");
             } else {
                 setVerifyError("Incorrect password");
             }

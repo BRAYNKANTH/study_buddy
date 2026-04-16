@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import api from '../api/axios';
 
 const StudentDetailModal = ({ student, subjectId, onClose, onNavigateToChat }) => {
@@ -58,7 +59,7 @@ const StudentDetailModal = ({ student, subjectId, onClose, onNavigateToChat }) =
                                     SubjectName: 'Parent'
                                 });
                             } else {
-                                alert("Parent account not linked for this student.");
+                                toast.error("Parent account not linked for this student.");
                             }
                         }}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg hover:shadow-blue-500/20 transition group font-medium"
