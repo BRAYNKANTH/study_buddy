@@ -139,7 +139,7 @@ const TutorManagement = () => {
                         <label className="block text-slate-700 mb-2 text-md font-medium">Subjects Taught</label>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-inner max-h-60 overflow-y-auto custom-scrollbar">
                             {subjects.map((subject) => (
-                                <label key={subject.SubjectID} className={`flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 border ${formData.SubjectIDs.includes(subject.SubjectID) ? 'bg-purple-600 border-purple-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
+                                <label key={subject.SubjectID} className={`flex items-center space-x-2 cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 border ${formData.SubjectIDs.includes(subject.SubjectID) ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}>
                                     <input
                                         type="checkbox"
                                         value={subject.SubjectID}

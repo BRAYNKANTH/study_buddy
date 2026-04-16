@@ -239,7 +239,7 @@ Jaffna, Sri Lanka</p>
                             </div>
 
                             {/* Decor */}
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+                            <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
                         </div>
                     </div>
 

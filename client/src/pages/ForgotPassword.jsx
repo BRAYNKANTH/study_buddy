@@ -241,7 +241,7 @@ const ForgotPassword = () => {
                                 </div>
                             </div>
                         </div>
-                        <button type="submit" disabled={loading} className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/20 transition disabled:opacity-50">
+                        <button type="submit" disabled={loading} className="w-full py-3.5 glass-button rounded-xl font-semibold shadow-lg shadow-blue-900/10 transition disabled:opacity-50">
                             {loading ? 'Resetting...' : 'Reset Password'}
                         </button>
                     </form>

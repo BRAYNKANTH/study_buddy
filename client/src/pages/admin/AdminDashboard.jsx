@@ -244,17 +244,17 @@ const AdminDashboard = () => {
                             <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Registrations</h3>
                             <p className="text-slate-500 relative z-10">Verify new student registrations.</p>
                         </div>
-                        <div className="glass-card p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-amber-500/10 hover:border-amber-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('communication')}>
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-amber-500/10 transition-colors"></div>
-                            <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-amber-100">
+                        <div className="glass-card p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('communication')}>
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
+                            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100">
                                 📢
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Announcements</h3>
                             <p className="text-slate-500 relative z-10">Post updates and news to all users.</p>
                         </div>
-                        <div className="glass-card p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-pink-500/10 hover:border-pink-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('subjects')}>
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-pink-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-pink-500/10 transition-colors"></div>
-                            <div className="w-14 h-14 bg-pink-50 text-pink-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-pink-100">
+                        <div className="glass-card p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('subjects')}>
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
+                            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100">
                                 📚
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 mb-2">Manage Subjects</h3>

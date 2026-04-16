@@ -379,7 +379,7 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
                                                     students.forEach(s => initialMarks[s.StudentID] = { marks: '', remarks: '' });
                                                     setMarksData(initialMarks);
                                                 }}
-                                                className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 hover:text-emerald-700 border border-emerald-200 rounded-lg text-sm font-bold transition"
+                                                className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 border border-blue-200 rounded-lg text-sm font-bold transition"
                                             >
                                                 Enter Marks
                                             </button>

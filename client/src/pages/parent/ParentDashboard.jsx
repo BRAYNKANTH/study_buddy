@@ -212,7 +212,7 @@ const ParentDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen p-4 md:p-8 transition-colors duration-300 bg-blue-50">
+        <div className="min-h-screen p-4 md:p-8 transition-colors duration-300 bg-slate-50">
             {viewIdCard && (
                 <StudentIDCard student={viewIdCard} onClose={() => setViewIdCard(null)} />
             )}
@@ -268,8 +268,8 @@ const ParentDashboard = () => {
                                 {loading ? <p className="text-slate-400">Loading...</p> : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {children.map(child => (
-                                            <div key={child.StudentID} className="glass-card p-6 flex flex-col items-center bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group hover:border-blue-400 relative overflow-hidden">
-                                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                            <div key={child.StudentID} className="glass-card p-6 flex flex-col items-center bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group hover:border-blue-300 relative overflow-hidden">
+                                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
                                                     🎓
                                                 </div>
@@ -342,7 +342,7 @@ const ParentDashboard = () => {
                             <>
                                 {paymentSuccess ? (
                                     <div className="glass-card p-8 animate-fade-in-up text-center max-w-lg mx-auto mt-10 bg-white border border-slate-200 rounded-xl shadow-lg">
-                                        <div className="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center mx-auto text-3xl shadow-lg shadow-blue-500/30 mb-6">
+                                        <div className="w-16 h-16 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto text-3xl shadow-lg shadow-emerald-500/30 mb-6">
                                             ✓
                                         </div>
                                         <h2 className="text-3xl font-bold text-slate-900 mb-2">Payment Successful!</h2>
@@ -397,7 +397,7 @@ const ParentDashboard = () => {
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         {/* Payment Form */}
-                                        <div className="glass-card p-8 bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-2xl shadow-sm">
+                                        <div className="glass-card p-8 bg-white border border-slate-200 rounded-2xl shadow-sm">
                                             <h3 className="text-xl font-bold text-slate-900 mb-6">Make a Payment</h3>
 
                                             {/* Mode Toggle */}
@@ -461,7 +461,7 @@ const ParentDashboard = () => {
                                         </div>
 
                                         {/* History */}
-                                        <div className="glass-card p-8 bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-2xl shadow-sm">
+                                        <div className="glass-card p-8 bg-white border border-slate-200 rounded-2xl shadow-sm">
                                             <h3 className="text-xl font-bold text-slate-900 mb-6">Payment History</h3>
                                             <div className="overflow-y-auto max-h-96 pr-2 custom-scrollbar">
                                                 {payments.length === 0 ? <p className="text-slate-400">No payments found.</p> : (
@@ -499,7 +499,7 @@ const ParentDashboard = () => {
 
                         {/* Academic Tab */}
                         {activeTab === 'academic' && (
-                            <div className="glass-card p-8 bg-gradient-to-br from-white to-blue-50 border border-blue-100 rounded-2xl shadow-sm h-full min-h-[500px]">
+                            <div className="glass-card p-8 bg-white border border-slate-200 rounded-2xl shadow-sm h-full min-h-[500px]">
                                 <div className="flex justify-between items-center mb-6">
                                     <h2 className="text-xl font-bold text-slate-900">Exam Results</h2>
                                     <select

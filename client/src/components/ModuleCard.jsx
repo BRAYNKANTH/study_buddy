@@ -7,7 +7,7 @@ const ModuleCard = ({ title, description, grade, onClick, color }) => {
             <div className={`absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-all`}></div>
 
             <div className="flex items-start justify-between mb-4 z-10">
-                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color || 'from-blue-600 to-indigo-600'} flex items-center justify-center text-xl shadow-lg shadow-blue-500/20 text-white`}>
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${color || 'from-blue-500 to-blue-700'} flex items-center justify-center text-xl shadow-lg shadow-blue-500/20 text-white`}>
                     📚
                 </div>
                 {grade && (

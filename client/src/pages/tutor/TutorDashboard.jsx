@@ -279,7 +279,7 @@ const TutorDashboard = () => {
                                             key={idx}
                                             title={`${mod.SubjectName} - Grade ${mod.Grade}`} // Combined Title
                                             description={`${mod.StudentCount || 0} Students`}
-                                            color="from-blue-600 to-indigo-600"
+                                            color="from-blue-500 to-blue-700"
                                             onClick={() => handleSelectGrade(mod)}
                                         />
                                     ))}

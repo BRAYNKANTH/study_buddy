@@ -67,15 +67,15 @@ const ChildDashboard = ({ student, onBack }) => {
     return (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col animate-fade-in-up">
             {/* Header */}
-            <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-4 md:p-6 rounded-t-2xl border-b border-blue-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
+            <div className="bg-blue-600 p-4 md:p-6 rounded-t-2xl border-b border-blue-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
                 <div className="flex items-center gap-4 relative z-10">
                     <button onClick={onBack} className="bg-white/10 hover:bg-white/20 p-2 rounded-xl transition text-white border border-white/20">
                         ← Back
                     </button>
                     <div>
                         <h1 className="text-2xl font-bold text-white">{student.StudentName}</h1>
-                        <p className="text-cyan-100 text-sm">Grade {student.Grade}</p>
+                        <p className="text-blue-100 text-sm">Grade {student.Grade}</p>
                     </div>
                 </div>
                 <div className="flex space-x-1 bg-white/10 p-1.5 rounded-2xl border border-white/10 overflow-x-auto relative z-10 backdrop-blur-sm">
@@ -83,7 +83,7 @@ const ChildDashboard = ({ student, onBack }) => {
                         <button
                             key={t}
                             onClick={() => { setTab(t); setSelectedSubject(null); }}
-                            className={`px-6 py-2.5 rounded-xl text-sm font-bold capitalize transition-all duration-300 whitespace-nowrap ${tab === t ? 'bg-white text-cyan-700 shadow-sm' : 'text-cyan-50 hover:text-white hover:bg-white/10'}`}
+                            className={`px-6 py-2.5 rounded-xl text-sm font-bold capitalize transition-all duration-300 whitespace-nowrap ${tab === t ? 'bg-white text-blue-700 shadow-sm' : 'text-blue-50 hover:text-white hover:bg-white/10'}`}
                         >
                             {t}
                         </button>
@@ -128,7 +128,7 @@ const ChildDashboard = ({ student, onBack }) => {
                                             `}
                                         >
                                             {!selectedSubject && (
-                                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                             )}
 
                                             {!selectedSubject && (
