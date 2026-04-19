@@ -10,9 +10,11 @@ const StudentIDCard = ({ student, onClose }) => {
         try {
             const canvas = await html2canvas(cardRef.current, {
                 scale: 4,
-                backgroundColor: null,
+                backgroundColor: '#ffffff',
                 useCORS: true,
                 logging: false,
+                scrollX: 0,
+                scrollY: 0,
             });
             const image = canvas.toDataURL('image/png');
             const link = document.createElement('a');
@@ -49,14 +51,17 @@ const StudentIDCard = ({ student, onClose }) => {
                         ref={cardRef}
                         style={{
                             width: '380px',
-                            minWidth: '320px',
+                            minWidth: '380px',
+                            maxWidth: '380px',
                             height: '240px',
+                            minHeight: '240px',
+                            maxHeight: '240px',
                             borderRadius: '14px',
                             overflow: 'hidden',
                             fontFamily: "'Outfit', 'Inter', sans-serif",
                             position: 'relative',
                             boxShadow: '0 8px 32px rgba(37,99,235,0.18)',
-                            background: '#fff',
+                            background: '#ffffff',
                         }}
                     >
                         {/* ── LEFT STRIPE (dark blue) ── */}
