@@ -43,11 +43,13 @@ const StudentIDCard = ({ student, onClose }) => {
                 </div>
 
                 {/* ── ID CARD ─────────────────────────────────────────── */}
-                <div className="flex justify-center mb-5">
+                <div className="flex justify-center mb-5 w-full overflow-x-auto">
+                    <div style={{ transform: 'scale(1)', transformOrigin: 'top center' }} className="w-full flex justify-center">
                     <div
                         ref={cardRef}
                         style={{
                             width: '380px',
+                            minWidth: '320px',
                             height: '240px',
                             borderRadius: '14px',
                             overflow: 'hidden',
@@ -185,6 +187,7 @@ const StudentIDCard = ({ student, onClose }) => {
                             height: '4px',
                             background: 'linear-gradient(90deg, #2563eb, #6366f1, #10b981)',
                         }} />
+                    </div>
                     </div>
                 </div>
 

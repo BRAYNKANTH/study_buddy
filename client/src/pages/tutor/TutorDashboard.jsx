@@ -158,30 +158,26 @@ const TutorDashboard = () => {
 
                 {/* Sub Navigation */}
                 {view !== 'class' && view !== 'settings' && (
-                    <div className="flex space-x-4 border-b border-slate-200 pb-2 overflow-x-auto">
-                        <button
-                            onClick={() => setView('dashboard')}
-                            className={`px-4 py-2 font-medium transition ${view === 'dashboard' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            My Classes
-                        </button>
-                        <button
-                            onClick={() => setView('timetable')}
-                            className={`px-4 py-2 font-medium transition ${view === 'timetable' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            Time Table
-                        </button>
-                        <button
-                            onClick={() => { setChatInitialContact(null); setView('chat'); }}
-                            className={`px-4 py-2 font-medium transition flex items-center gap-2 ${view === 'chat' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            Messages
-                            {unreadCount > 0 && (
-                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse shadow-md">
-                                    {unreadCount}
-                                </span>
-                            )}
-                        </button>
+                    <div className="flex gap-1 border-b border-slate-200 pb-0 overflow-x-auto scrollbar-hide">
+                        {[
+                            { id: 'dashboard', label: 'My Classes', icon: '📚' },
+                            { id: 'timetable', label: 'Timetable', icon: '📅' },
+                            { id: 'chat', label: 'Messages', icon: '💬' },
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => { if (tab.id === 'chat') setChatInitialContact(null); setView(tab.id); }}
+                                className={`flex items-center gap-2 px-4 py-3 font-medium text-sm transition whitespace-nowrap border-b-2 -mb-px ${view === tab.id ? 'text-blue-600 border-blue-600' : 'text-slate-500 hover:text-slate-900 border-transparent'}`}
+                            >
+                                <span className="hidden sm:inline">{tab.icon}</span>
+                                {tab.label}
+                                {tab.id === 'chat' && unreadCount > 0 && (
+                                    <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full animate-pulse shadow-md">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
                     </div>
                 )}
 

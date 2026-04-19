@@ -263,7 +263,7 @@ Jaffna, Sri Lanka</p>
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-blue-50 transition-colors duration-300">
-            <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-xl rounded-2xl max-w-2xl w-full p-8 animate-fade-in-up">
+            <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-xl rounded-2xl max-w-2xl w-full p-4 sm:p-6 md:p-8 animate-fade-in-up">
                 <h1 className="text-2xl font-bold text-slate-900 mb-6">Student Registration</h1>
 
                 {/* Step Progress */}
