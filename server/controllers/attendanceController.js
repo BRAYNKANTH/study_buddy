@@ -5,9 +5,13 @@ const markAttendance = async (req, res) => {
     let { studentId, subjectId, status, sessionId, startTime, endTime } = req.body;
     const teacherId = req.user.id;
 
-    // SECURITY: Ignore client date. Use Server Date.
+    // SECURITY: Ignore client date. Use Server Date in Sri Lanka time (UTC+5:30).
+    // Azure runs UTC — without this offset, 7:50 PM Sri Lanka = 2:20 PM UTC
+    // and the time-window check would think the session hasn't started.
+    const SL_OFFSET_MS = (5 * 60 + 30) * 60 * 1000; // 330 min in ms
     const now = new Date();
-    const serverDate = now.toISOString().split('T')[0];
+    const nowSL = new Date(now.getTime() + SL_OFFSET_MS);
+    const serverDate = nowSL.toISOString().split('T')[0]; // YYYY-MM-DD in SL time
 
     if (!studentId || !subjectId) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -39,7 +43,8 @@ const markAttendance = async (req, res) => {
             if (sess.StartTime && sess.StartTime !== '00:00:00') {
                 const [sh, sm] = sess.StartTime.toString().slice(0, 5).split(':').map(Number);
                 const [eh, em] = sess.EndTime.toString().slice(0, 5).split(':').map(Number);
-                const nowMins = now.getHours() * 60 + now.getMinutes();
+                // Use Sri Lanka local time (same offset applied to nowSL above)
+                const nowMins = nowSL.getUTCHours() * 60 + nowSL.getUTCMinutes();
                 const startMins = sh * 60 + sm;
                 const endMins = eh * 60 + em;
 
