@@ -121,7 +121,7 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
     const handleCreateSession = async (e) => {
         e.preventDefault();
         try {
-            await api.post('/attendance/session', {
+            await api.post('/attendance/teacher/session', {
                 subjectId: subject.SubjectID,
                 grade: grade,
                 date: newSession.date,
