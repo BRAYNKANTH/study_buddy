@@ -271,8 +271,8 @@ const ParentDashboard = () => {
                         {/* Navigation */}
                         {/* Navigation Menu — tab bar hidden on mobile, replaced by BottomNav */}
                         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                            <div className="hidden md:flex space-x-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 w-full md:w-auto overflow-x-auto">
-                                <button onClick={() => setActiveTab('overview')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'overview' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                            <nav aria-label="Dashboard sections" className="hidden md:flex space-x-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 w-full md:w-auto overflow-x-auto">
+                                <button onClick={() => setActiveTab('overview')} aria-current={activeTab === 'overview' ? 'page' : undefined} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === 'overview' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
                                     Overview
                                 </button>
                                 <button onClick={() => setActiveTab('payments')} aria-current={activeTab === 'payments' ? 'page' : undefined} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === 'payments' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
@@ -506,75 +506,38 @@ const ParentDashboard = () => {
                                                     <button aria-pressed={paymentMode === 'card'} className={`flex-1 py-2 rounded-md transition text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${paymentMode === 'card' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`} onClick={() => setPaymentMode('card')}>Pay Online (Card)</button>
                                                     <button aria-pressed={paymentMode === 'slip'} className={`flex-1 py-2 rounded-md transition text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${paymentMode === 'slip' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`} onClick={() => setPaymentMode('slip')}>Upload Slip</button>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-sm text-slate-500 mb-2 font-medium">Amount (LKR)</label>
-                                                    <input type="number" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} required className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none" />
-                                                </div>
-
-                                                {paymentMode === 'slip' && (
-                                                    <>
-                                                        <div>
-                                                            <label className="block text-sm text-slate-500 mb-2 font-medium">Reference No</label>
-                                                            <input type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Bank Ref No (Optional)" />
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-sm text-slate-500 mb-2 font-medium">Upload Receipt</label>
-                                                            <input
-                                                                type="file"
-                                                                onChange={(e) => setPayFile(e.target.files[0])}
-                                                                className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
-                                                                accept="image/*,application/pdf"
-                                                            />
-                                                        </div>
-                                                    </>
-                                                )}
-
-                                                <button type="submit" className="w-full py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg hover:shadow-blue-500/20 font-bold transition-all">
-                                                    {paymentMode === 'card' ? `Pay LKR ${payAmount || '0.00'} Now` : 'Submit Receipt'}
-                                                </button>
-
-                                                {paymentMode === 'card' && (
-                                                    <p className="text-xs text-center text-slate-400 mt-2">Secured by PayHere</p>
-                                                )}
-                                            </form>
-                                        </div>
-
-                                        {/* History */}
-                                        <div className="glass-card p-8 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                                            <h3 className="text-xl font-bold text-slate-900 mb-6">Payment History</h3>
-                                            <div className="overflow-y-auto max-h-96 pr-2 custom-scrollbar">
-                                                {payments.length === 0 ? (
-                                    <EmptyState
-                                        icon="💳"
-                                        title="No Payment History"
-                                        subtitle="Your payment records will appear here once you make your first payment."
-                                    />
-                                ) : (
-                                                    <table className="w-full text-left text-sm text-slate-600">
-                                                        <thead>
-                                                            <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
-                                                                <th className="pb-3 pl-2 pt-2">Date</th>
-                                                                <th className="pb-3 pt-2">Month</th>
-                                                                <th className="pb-3 pt-2">Status</th>
-                                                                <th className="pb-3 text-right pr-2 pt-2">Amount</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="text-slate-700">
-                                                            {payments.map(p => (
-                                                                <tr key={p.PaymentID} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                                                    <td className="py-4 pl-2 text-slate-500">{new Date(p.PaymentDate).toLocaleDateString()}</td>
-                                                                    <td className="py-4">{p.Month}</td>
-                                                                    <td className="py-4">
-                                                                        <span className={`px-2.5 py-1 rounded-lg text-xs font-medium border ${p.Status === 'Verified' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : p.Status === 'Rejected' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
-                                                                            {p.Status}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="py-4 text-right pr-2 font-mono font-medium text-slate-900">Rs. {p.Amount}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                )}
+                                                <form onSubmit={(e) => { handlePaymentSubmit(e); setShowPayModal(false); }} className="space-y-4">
+                                                    <div>
+                                                        <label htmlFor="pay-student" className="block text-sm text-slate-500 mb-2 font-medium">Student</label>
+                                                        <select id="pay-student" value={payStudent} onChange={(e) => setPayStudent(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none">
+                                                            {children.map(c => <option key={c.StudentID} value={c.StudentID}>{c.StudentName}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label htmlFor="pay-month" className="block text-sm text-slate-500 mb-2 font-medium">Month</label>
+                                                        <input id="pay-month" type="month" value={payMonth} onChange={(e) => setPayMonth(e.target.value)} required aria-required="true" className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none" />
+                                                    </div>
+                                                    <div>
+                                                        <label htmlFor="pay-amount" className="block text-sm text-slate-500 mb-2 font-medium">Amount (LKR)</label>
+                                                        <input id="pay-amount" type="number" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} required aria-required="true" className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none" />
+                                                    </div>
+                                                    {paymentMode === 'slip' && (
+                                                        <>
+                                                            <div>
+                                                                <label htmlFor="pay-ref" className="block text-sm text-slate-500 mb-2 font-medium">Reference No</label>
+                                                                <input id="pay-ref" type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none" placeholder="Bank Ref No (Optional)" />
+                                                            </div>
+                                                            <div>
+                                                                <label htmlFor="pay-receipt" className="block text-sm text-slate-500 mb-2 font-medium">Upload Receipt</label>
+                                                                <input id="pay-receipt" type="file" onChange={(e) => setPayFile(e.target.files[0])} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100" accept="image/*,application/pdf" />
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                    <button type="submit" className="w-full py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg hover:shadow-blue-500/20 font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                                                        {paymentMode === 'card' ? `Pay LKR ${payAmount || '0.00'} Now` : 'Submit Receipt'}
+                                                    </button>
+                                                    {paymentMode === 'card' && <p className="text-xs text-center text-slate-400">Secured by PayHere</p>}
+                                                </form>
                                             </div>
                                         </div>
                                     </div>

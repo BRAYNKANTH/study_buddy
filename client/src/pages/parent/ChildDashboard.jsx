@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import Chat from '../communication/Chat';
 
-const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const ChildDashboard = ({ student, onBack }) => {
     const [tab, setTab] = useState('subjects'); // subjects, attendance, results, timetable
@@ -219,7 +219,7 @@ const ChildDashboard = ({ student, onBack }) => {
 
                                                     <div className="flex gap-2">
                                                         <a
-                                                            href={`${API_BASE}/uploads/materials/${mat.FileName}`}
+                                                            href={`${API_URL}/uploads/materials/${mat.FileName}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="flex-1 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2 border border-blue-100"
@@ -227,7 +227,7 @@ const ChildDashboard = ({ student, onBack }) => {
                                                             <span>👁</span> Open
                                                         </a>
                                                         <a
-                                                            href={`/api/academic/materials/download/${mat.FileName}`}
+                                                            href={`${API_URL}/academic/materials/download/${mat.FileName}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="flex-1 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2 border border-emerald-100"

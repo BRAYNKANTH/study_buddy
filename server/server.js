@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mysql = require('mysql2');
+const path = require('path');
 
 dotenv.config();
 
@@ -35,9 +36,11 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const academicRoutes = require('./routes/academicRoutes');
 const communicationRoutes = require('./routes/communicationRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const { startAttendanceChecker } = require('./jobs/attendanceChecker');
 
 // Routes
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/attendance', attendanceRoutes);
@@ -53,4 +56,5 @@ app.get('/', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    startAttendanceChecker();
 });
