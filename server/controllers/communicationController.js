@@ -82,7 +82,7 @@ const getChatContacts = async (req, res) => {
         if (userRole === 'teacher') {
             query += `
                 UNION
-                SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'parent' as Role, sub.SubjectName
+                SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'parent' AS Role, sub.SubjectName
                 FROM TeacherSubject ts
                 JOIN Subject sub ON ts.SubjectID = sub.SubjectID
                 JOIN SubjectGrade sg ON sub.SubjectID = sg.SubjectID
@@ -90,17 +90,49 @@ const getChatContacts = async (req, res) => {
                 JOIN Student st ON e.StudentID = st.StudentID
                 JOIN User u ON st.ParentID = u.UserID
                 WHERE ts.TeacherID = ?
-             `;
+            `;
+            params.push(userId);
+        }
+
+        // Parents also see all teachers of their enrolled children (even if no prior chat)
+        if (userRole === 'parent') {
+            query += `
+                UNION
+                SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'teacher' AS Role, sub.SubjectName
+                FROM Student st
+                JOIN Enrollment e ON st.StudentID = e.StudentID
+                JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
+                JOIN TeacherSubject ts ON sg.SubjectID = ts.SubjectID
+                JOIN User u ON ts.TeacherID = u.UserID
+                JOIN Subject sub ON ts.SubjectID = sub.SubjectID
+                WHERE st.ParentID = ?
+            `;
             params.push(userId);
         }
 
         const [contacts] = await db.query(query, params);
 
+        // Enhance teacher contacts with student details for parents
+        if (userRole === 'parent') {
+            for (let c of contacts) {
+                if (c.Role === 'teacher') {
+                    const [students] = await db.query(`
+                        SELECT DISTINCT st.StudentID, st.StudentName, st.Grade
+                        FROM Student st
+                        JOIN Enrollment e ON st.StudentID = e.StudentID
+                        JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
+                        JOIN TeacherSubject ts ON sg.SubjectID = ts.SubjectID
+                        WHERE st.ParentID = ? AND ts.TeacherID = ?
+                    `, [userId, c.ContactID]);
+                    c.Students = students;
+                }
+            }
+        }
+
         // Enhance parent contacts with student details for teachers
         if (userRole === 'teacher') {
             for (let c of contacts) {
                 if (c.Role === 'parent') {
-                    // Fetch students for this parent that THIS teacher teaches
                     const [students] = await db.query(`
                         SELECT DISTINCT st.StudentID, st.StudentName, st.Grade, st.ParentID
                         FROM Student st
