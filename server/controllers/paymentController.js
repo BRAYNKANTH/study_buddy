@@ -12,10 +12,23 @@ const generatePayHereHash = async (req, res) => {
         return res.status(500).json({ message: "PayHere configuration missing" });
     }
 
-    const amountFormatted = parseFloat(amount).toLocaleString('en-us', { minimumFractionDigits: 2 }).replace(/,/g, '');
+    // Use toFixed(2) — more reliable than toLocaleString across Node environments
+    const amountFormatted = parseFloat(amount).toFixed(2);
     const hashedSecret = crypto.createHash('md5').update(merchantSecret).digest('hex').toUpperCase();
-    const hashString = merchantId + order_id + amountFormatted + currency + hashedSecret;
+    const hashString = `${merchantId}${order_id}${amountFormatted}${currency}${hashedSecret}`;
     const hash = crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
+
+    // Debug log — remove after payment is confirmed working
+    console.log('[PayHere Hash Debug]', {
+        merchantId,
+        order_id,
+        amountFormatted,
+        currency,
+        secretLength: merchantSecret.length,
+        hashedSecret,
+        hashString,
+        hash
+    });
 
     res.json({ hash, merchantId, amountFormatted });
 };
