@@ -388,11 +388,55 @@ const getAdminStats = async (req, res) => {
     }
 };
 
+// Update Parent Profile (email + phone)
+const updateParentProfile = async (req, res) => {
+    const userId = req.user.id;
+    const { email, phone } = req.body;
+
+    if (!email && !phone) {
+        return res.status(400).json({ message: "Provide at least email or phone to update." });
+    }
+
+    try {
+        if (email) {
+            const [existing] = await db.query(
+                "SELECT UserID FROM User WHERE Email = ? AND UserID != ?", [email, userId]
+            );
+            if (existing.length > 0) {
+                return res.status(400).json({ message: "Email is already in use by another account." });
+            }
+            await db.query("UPDATE User SET Email = ? WHERE UserID = ?", [email, userId]);
+        }
+        if (phone) {
+            const [existing] = await db.query(
+                "SELECT UserID FROM ParentProfile WHERE Phone = ? AND UserID != ?", [phone, userId]
+            );
+            if (existing.length > 0) {
+                return res.status(400).json({ message: "Phone number is already in use by another account." });
+            }
+            await db.query("UPDATE ParentProfile SET Phone = ? WHERE UserID = ?", [phone, userId]);
+        }
+
+        const [updated] = await db.query(
+            `SELECT u.Email, pp.Phone FROM User u
+             JOIN ParentProfile pp ON pp.UserID = u.UserID
+             WHERE u.UserID = ?`,
+            [userId]
+        );
+
+        res.json({ message: "Profile updated successfully.", profile: updated[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error updating profile." });
+    }
+};
+
 module.exports = {
     getAllTutors, addTutor,
     getAllParents, addParent,
     getAllStudents, addStudent, registerStudent,
     getMyChildren,
     deleteUser, deleteStudent,
-    getAdminStats
+    getAdminStats,
+    updateParentProfile
 };

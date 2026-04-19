@@ -4,7 +4,7 @@ const {
     getAllTutors, addTutor,
     getAllParents, addParent,
     getAllStudents, addStudent, registerStudent, deleteStudent,
-    getMyChildren, deleteUser, getAdminStats
+    getMyChildren, deleteUser, getAdminStats, updateParentProfile
 } = require('../controllers/userController');
 const { verifyToken, verifyRole } = require('../middleware/authMiddleware');
 const { addTutorValidation, addStudentValidation } = require('../middleware/validationMiddleware');
@@ -26,6 +26,9 @@ router.delete('/student/:id', verifyToken, verifyRole(['admin', 'parent']), dele
 
 // Admin Stats
 router.get('/stats', verifyToken, verifyRole(['admin']), getAdminStats);
+
+// Parent Profile Update
+router.put('/profile', verifyToken, verifyRole(['parent']), updateParentProfile);
 
 // General User Management
 router.delete('/:userId', verifyToken, verifyRole(['admin']), deleteUser);

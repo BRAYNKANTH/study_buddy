@@ -40,6 +40,16 @@ const markAttendance = async (req, res) => {
             // Allow scanning from 30 min before start up to 60 min after end.
             // Skip check for ad-hoc sessions stored with 00:00:00 times.
             const sess = explicitSession[0];
+
+            // Reject scans for sessions not scheduled today
+            const sessDate = new Date(sess.Date).toISOString().split('T')[0];
+            if (sessDate !== serverDate) {
+                return res.status(400).json({
+                    message: "This session is not scheduled for today. Past sessions cannot be scanned.",
+                    code: 'WRONG_DATE'
+                });
+            }
+
             if (sess.StartTime && sess.StartTime !== '00:00:00') {
                 const [sh, sm] = sess.StartTime.toString().slice(0, 5).split(':').map(Number);
                 const [eh, em] = sess.EndTime.toString().slice(0, 5).split(':').map(Number);
