@@ -197,8 +197,8 @@ const Login = () => {
                             <input
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value)}
-                                className="w-full px-4 py-5 glass-input text-center text-4xl tracking-[0.5em] font-bold font-mono placeholder:tracking-normal placeholder:font-sans placeholder:text-lg text-slate-900"
-                                placeholder="Enter 6-digit code"
+                                className="w-full px-4 py-4 glass-input text-center text-2xl sm:text-4xl tracking-[0.3em] sm:tracking-[0.5em] font-bold font-mono placeholder:tracking-normal placeholder:font-sans placeholder:text-base placeholder:text-slate-400 text-slate-900"
+                                placeholder="000000"
                                 maxLength="6"
                                 required
                             />

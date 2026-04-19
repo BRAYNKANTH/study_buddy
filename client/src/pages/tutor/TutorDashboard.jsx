@@ -5,9 +5,11 @@ import api from '../../api/axios';
 import PageHeader from '../../components/PageHeader';
 import ModuleCard from '../../components/ModuleCard';
 import SkeletonCard from '../../components/SkeletonCard';
+import BottomNav from '../../components/BottomNav';
 import ClassView from './ClassView';
 import Chat from '../communication/Chat';
 import QRScanner from '../../components/QRScanner';
+import EmptyState from '../../components/EmptyState';
 
 const TutorDashboard = () => {
     const { user, logout } = useAuth();
@@ -79,6 +81,22 @@ const TutorDashboard = () => {
         fetchTodaySessions(); // Refresh when returning
     };
 
+    // ── Session time helpers ───────────────────────────────────────────────────
+    // Returns 'upcoming' | 'active' | 'ended'
+    const getSessionStatus = (sess) => {
+        if (!sess.StartTime || sess.StartTime === '00:00:00') return 'active'; // ad-hoc
+        const now = new Date();
+        const nowMins = now.getHours() * 60 + now.getMinutes();
+        const [sh, sm] = sess.StartTime.toString().slice(0, 5).split(':').map(Number);
+        const [eh, em] = sess.EndTime.toString().slice(0, 5).split(':').map(Number);
+        const startMins = sh * 60 + sm;
+        const endMins   = eh * 60 + em;
+        if (nowMins < startMins - 30) return 'upcoming';
+        if (nowMins > endMins + 60)   return 'ended';
+        return 'active';
+    };
+    // ── End session time helpers ───────────────────────────────────────────────
+
     // QR Scanning Logic
     const handleScanClick = (sessionId) => {
         setScanningSessionId(sessionId);
@@ -90,21 +108,28 @@ const TutorDashboard = () => {
             toast.error("Error: No session selected.");
             return;
         }
-        // Find session details to get SubjectID
+        // Find session details to get SubjectID (fixed: was undefined before)
         const session = todaySessions.find(s => s.SessionID === scanningSessionId);
-        if (!session) return toast.error("Session not found context");
+        if (!session) return toast.error("Session not found.");
+        if (!session.SubjectID) return toast.error("Session is missing subject info. Please refresh.");
 
         try {
             const res = await api.post('/attendance/mark', {
                 studentId: decodedText,
                 subjectId: session.SubjectID,
                 sessionId: scanningSessionId,
-                status: 'Present'
+                status: 'Present',
+                // Pass timetable times so virtual sessions get correct times in DB
+                startTime: session.StartTime,
+                endTime: session.EndTime
             });
-            toast.success(`Attendance Marked for ${res.data.studentName}!`);
+            toast.success(`✅ Attendance marked for ${res.data.studentName}!`);
+            return res.data; // returned to QRScanner for success display
         } catch (err) {
             console.log("Scan error", err);
-            toast.error("Failed to mark attendance: " + (err.response?.data?.message || err.message));
+            const msg = err.response?.data?.message || err.message || 'Scan failed';
+            toast.error(msg);
+            throw err; // re-throw so QRScanner shows error state
         }
     };
 
@@ -146,8 +171,8 @@ const TutorDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen p-4 md:p-8 transition-colors duration-300 bg-slate-50">
-            <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 animate-fade-in-up">
+        <div className="min-h-screen p-4 md:p-8 pb-24 md:pb-8 transition-colors duration-300 bg-slate-50">
+            <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
                 {/* Global Header */}
                 <PageHeader
                     title="Tutor Dashboard"
@@ -158,30 +183,26 @@ const TutorDashboard = () => {
 
                 {/* Sub Navigation */}
                 {view !== 'class' && view !== 'settings' && (
-                    <div className="flex space-x-4 border-b border-slate-200 pb-2 overflow-x-auto">
-                        <button
-                            onClick={() => setView('dashboard')}
-                            className={`px-4 py-2 font-medium transition ${view === 'dashboard' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            My Classes
-                        </button>
-                        <button
-                            onClick={() => setView('timetable')}
-                            className={`px-4 py-2 font-medium transition ${view === 'timetable' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            Time Table
-                        </button>
-                        <button
-                            onClick={() => { setChatInitialContact(null); setView('chat'); }}
-                            className={`px-4 py-2 font-medium transition flex items-center gap-2 ${view === 'chat' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-slate-500 hover:text-slate-900'}`}
-                        >
-                            Messages
-                            {unreadCount > 0 && (
-                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse shadow-md">
-                                    {unreadCount}
-                                </span>
-                            )}
-                        </button>
+                    <div className="hidden md:flex gap-1 border-b border-slate-200 pb-0 overflow-x-auto scrollbar-hide">
+                        {[
+                            { id: 'dashboard', label: 'My Classes', icon: '📚' },
+                            { id: 'timetable', label: 'Timetable', icon: '📅' },
+                            { id: 'chat', label: 'Messages', icon: '💬' },
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => { if (tab.id === 'chat') setChatInitialContact(null); setView(tab.id); }}
+                                className={`flex items-center gap-2 px-4 py-3 font-medium text-sm transition whitespace-nowrap border-b-2 -mb-px ${view === tab.id ? 'text-blue-600 border-blue-600' : 'text-slate-500 hover:text-slate-900 border-transparent'}`}
+                            >
+                                <span className="hidden sm:inline">{tab.icon}</span>
+                                {tab.label}
+                                {tab.id === 'chat' && unreadCount > 0 && (
+                                    <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full animate-pulse shadow-md">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
                     </div>
                 )}
 
@@ -229,6 +250,15 @@ const TutorDashboard = () => {
                 ) : view === 'chat' ? <Chat initialContact={chatInitialContact} onMessageRead={fetchUnreadCount} /> : view === 'dashboard' ? (
                     <>
                         {/* Today's Sessions Section */}
+                        {!loading && todaySessions.length === 0 && (
+                            <div className="flex items-center gap-4 px-5 py-4 bg-blue-50 border border-blue-100 rounded-2xl mb-2">
+                                <span className="text-2xl">✅</span>
+                                <div>
+                                    <p className="font-semibold text-blue-800 text-sm">No sessions scheduled for today</p>
+                                    <p className="text-xs text-blue-500 mt-0.5">Check your timetable or enjoy a free day!</p>
+                                </div>
+                            </div>
+                        )}
                         {todaySessions.length > 0 && (
                             <div className="mb-8">
                                 <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -236,29 +266,70 @@ const TutorDashboard = () => {
                                     Today's Sessions <span className="text-sm font-normal text-slate-500 ml-2">({new Date().toLocaleDateString()})</span>
                                 </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {todaySessions.map(sess => (
-                                        <div key={sess.SessionID} className="p-5 bg-white rounded-2xl border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 transition group relative overflow-hidden">
+                                    {todaySessions.map(sess => {
+                                        const status = getSessionStatus(sess);
+                                        const isLive = status === 'active';
+                                        const startLabel = sess.StartTime ? sess.StartTime.toString().slice(0, 5) : '--:--';
+                                        const endLabel   = sess.EndTime   ? sess.EndTime.toString().slice(0, 5)   : '--:--';
+                                        return (
+                                        <div key={sess.SessionID} className={`p-5 bg-white rounded-2xl shadow-sm transition group relative overflow-hidden
+                                            ${isLive ? 'border-2 border-emerald-400 hover:shadow-lg hover:shadow-emerald-500/10' :
+                                              status === 'upcoming' ? 'border border-amber-200' :
+                                              'border border-slate-200 opacity-70'}`}>
                                             <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                             <div className="flex justify-between items-start mb-3 relative z-10">
                                                 <div>
-                                                    <h3 className="font-bold text-slate-900 text-lg">{sess.SubjectName}</h3>
-                                                    <span className="text-xs font-mono bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100 font-semibold mt-1 inline-block">Grade {sess.Grade}</span>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h3 className="font-bold text-slate-900 text-lg">{sess.SubjectName}</h3>
+                                                        {/* Live / status badge */}
+                                                        {isLive && (
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 animate-pulse border border-emerald-200">
+                                                                🔴 LIVE
+                                                            </span>
+                                                        )}
+                                                        {status === 'upcoming' && (
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                                                                ⏰ Upcoming
+                                                            </span>
+                                                        )}
+                                                        {status === 'ended' && (
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                                                ✅ Done
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-xs font-mono bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100 font-semibold inline-block">Grade {sess.Grade}</span>
+                                                    {sess.IsVirtual && <span className="ml-2 text-[10px] text-slate-400 italic">timetable</span>}
                                                 </div>
                                                 <div className="text-right">
-                                                    <div className="text-blue-600 font-bold">{sess.StartTime.slice(0, 5)}</div>
-                                                    <div className="text-xs text-slate-400">{sess.EndTime.slice(0, 5)}</div>
+                                                    <div className={`font-bold text-sm ${isLive ? 'text-emerald-600' : 'text-blue-600'}`}>{startLabel}</div>
+                                                    <div className="text-xs text-slate-400">{endLabel}</div>
                                                 </div>
                                             </div>
 
                                             <button
-                                                onClick={() => handleScanClick(sess.SessionID)}
-                                                className="w-full mt-2 py-3 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 border border-blue-200 hover:border-blue-600 rounded-xl font-bold shadow-sm flex items-center justify-center gap-2 transition-all duration-300 group-hover:translate-y-0"
+                                                onClick={() => isLive && handleScanClick(sess.SessionID)}
+                                                disabled={!isLive}
+                                                className={`w-full mt-2 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300
+                                                    ${isLive
+                                                        ? 'bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 border border-blue-200 hover:border-blue-600 cursor-pointer'
+                                                        : status === 'upcoming'
+                                                            ? 'bg-amber-50 text-amber-600 border border-amber-200 cursor-not-allowed'
+                                                            : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                                                    }`}
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
-                                                Scan Attendance
+                                                {isLive && (
+                                                    <>
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+                                                        Scan Attendance
+                                                    </>
+                                                )}
+                                                {status === 'upcoming' && `⏰ Opens at ${startLabel}`}
+                                                {status === 'ended'    && '⛔ Attendance Closed'}
                                             </button>
                                         </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -284,9 +355,13 @@ const TutorDashboard = () => {
                                         />
                                     ))}
                                     {modules.length === 0 && (
-                                        <p className="text-slate-400 col-span-full text-center py-10">
-                                            No classes assigned yet.
-                                        </p>
+                                        <div className="col-span-full">
+                                            <EmptyState
+                                                icon="📚"
+                                                title="No Classes Assigned"
+                                                subtitle="Your assigned classes will appear here once the admin sets them up."
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -296,7 +371,13 @@ const TutorDashboard = () => {
                     <div className="glass-card p-6 bg-white border border-slate-200 shadow-sm">
                         <h2 className="text-xl font-bold text-slate-900 mb-4">My Weekly Schedule</h2>
                         <div className="space-y-4">
-                            {timetableData.length === 0 ? <p className="text-slate-400">No scheduled classes.</p> : (
+                            {timetableData.length === 0 ? (
+                                <EmptyState
+                                    icon="📅"
+                                    title="No Weekly Schedule"
+                                    subtitle="Your recurring timetable will appear here once the admin adds it."
+                                />
+                            ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {timetableData.map(t => (
                                         <div key={t.TimetableID} className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-400 transition hover:shadow-sm">
@@ -325,6 +406,20 @@ const TutorDashboard = () => {
             </div>
 
             {showScanner && <QRScanner onScanPromise={handleScan} onClose={() => setShowScanner(false)} />}
+
+            {/* Mobile Bottom Navigation — hide when inside a class view */}
+            {view !== 'class' && (
+                <BottomNav
+                    items={[
+                        { id: 'dashboard', label: 'Classes', icon: '📚', badge: 0 },
+                        { id: 'timetable', label: 'Timetable', icon: '📅', badge: 0 },
+                        { id: 'chat', label: 'Messages', icon: '💬', badge: unreadCount },
+                        { id: 'settings', label: 'Settings', icon: '⚙️', badge: 0 },
+                    ]}
+                    activeTab={view}
+                    onTabChange={(id) => { if (id === 'chat') setChatInitialContact(null); setView(id); }}
+                />
+            )}
         </div>
     );
 }

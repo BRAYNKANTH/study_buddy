@@ -91,28 +91,29 @@ function LandingPage() {
             </nav>
 
             {/* Hero Section */}
-            <section id="hero" className="relative min-h-screen flex items-center justify-center px-4 pt-20 bg-white">
-                {/* Decorative background elements can be added here if needed, keeping it clean for now or using a light image */}
-                <div className="absolute inset-0 z-0 opacity-30">
-                    <img src={heroBg} alt="Background" className="w-full h-full object-cover" />
-                </div>
+            <section id="hero" className="relative min-h-screen flex items-center justify-center px-6 pt-20 bg-background text-center overflow-hidden">
+                {/* Minimal Grid Background */}
+                <div className="absolute inset-0 z-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3Ryb2tlPSIjZTBlMGUwIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHN0cm9rZS1vcGFjaXR5PSIwLjIyIj48cGF0aCBkPSJNMCA0MGgxVjRoMzZWMHoiLz48L2c+PC9zdmc+')] [mask-image:linear-gradient(to_bottom,white,transparent)] opacity-40 mix-blend-multiply"></div>
 
-                <div className="relative z-10 text-center max-w-4xl mx-auto space-y-8 animate-fade-in-up">
-                    <div className="inline-block px-4 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-medium mb-4">
-                        🎓 Excellence in Education
+                <div className="relative z-10 max-w-5xl mx-auto space-y-10 animate-fade-in-up">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold uppercase tracking-widest mb-6">
+                        <span>🎓</span> Excellence in Education
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight text-slate-900">
+                    
+                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-none text-slate-900">
                         Empowering the <br />
-                        <span className="text-blue-600">Next Generation</span>
+                        <span className="text-blue-600">Next Generation.</span>
                     </h1>
-                    <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto font-light leading-relaxed">
-                        Theebam Education Centre provides a world-class learning environment connecting students, parents, and tutors seamlessly. Join us to unlock your full potential.
+                    
+                    <p className="text-xl md:text-2xl text-slate-500 max-w-3xl mx-auto font-normal leading-relaxed">
+                        A world-class digital learning environment seamlessly connecting students, parents, and expert tutors.
                     </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                        <button onClick={() => navigate('/register')} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-500/20 transition transform hover:scale-105">
-                            Get Started Now
+                    
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+                        <button onClick={() => navigate('/register')} className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-lg shadow-xl shadow-blue-500/20 transition transform hover:scale-105 active:scale-95">
+                            Get Started
                         </button>
-                        <button onClick={() => scrollTo('about')} className="px-8 py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl font-semibold text-lg transition">
+                        <button onClick={() => scrollTo('about')} className="px-8 py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 rounded-xl font-medium text-lg transition shadow-sm hover:shadow">
                             Learn More
                         </button>
                     </div>
@@ -251,13 +252,13 @@ function App() {
 
                     {/* Catch all */}
                     <Route path="*" element={
-                        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50">
-                            <div className="text-center animate-fade-in-up">
-                                <p className="text-7xl font-extrabold text-blue-600 mb-2">404</p>
-                                <h1 className="text-2xl font-bold text-slate-900 mb-2">Page Not Found</h1>
-                                <p className="text-slate-500 mb-8">The page you're looking for doesn't exist or has been moved.</p>
-                                <a href="/" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 transition">
-                                    ← Back to Home
+                        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white">
+                            <div className="text-center animate-fade-in-up max-w-md">
+                                <p className="text-8xl font-black text-black mb-4 tracking-tighter">404</p>
+                                <h1 className="text-2xl font-bold text-black mb-2">Page Not Found</h1>
+                                <p className="text-neutral-500 mb-8">This page doesn't exist or has been removed.</p>
+                                <a href="/" className="inline-flex items-center justify-center px-6 py-3 bg-black hover:bg-neutral-800 text-white font-medium rounded-xl shadow-lg shadow-black/10 transition-all w-full">
+                                    Return Home
                                 </a>
                             </div>
                         </div>

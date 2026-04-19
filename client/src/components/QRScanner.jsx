@@ -7,7 +7,7 @@ const QRScanner = ({ onScanPromise, onClose }) => {
     const [error, setError] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [lastScanned, setLastScanned] = useState(null);
-    const [facingMode, setFacingMode] = useState('environment');
+    const [facingMode, setFacingMode] = useState('environment'); // 'environment'=back, 'user'=front
     const [starting, setStarting] = useState(true);
     const scannerRef = useRef(null);
     const isMountedRef = useRef(true);
@@ -29,14 +29,16 @@ const QRScanner = ({ onScanPromise, onClose }) => {
         setStarting(true);
 
         try {
+            // Use Html5Qrcode with barcode detector for better Android performance
             const scanner = new Html5Qrcode(divId, { verbose: false });
             scannerRef.current = scanner;
 
+            // Use facingMode constraint — far more reliable than deviceId on Android/iOS
             await scanner.start(
                 { facingMode: mode },
                 { fps: 10, qrbox: { width: 220, height: 220 } },
                 onScanSuccess,
-                () => {}
+                () => { /* ignore per-frame decode failures — normal behaviour */ }
             );
 
             if (isMountedRef.current) setStarting(false);
@@ -44,6 +46,7 @@ const QRScanner = ({ onScanPromise, onClose }) => {
             console.error('Camera start error:', err);
             if (!isMountedRef.current) return;
 
+            // Extract message — html5-qrcode sometimes throws non-standard objects
             const msg = typeof err === 'string' ? err
                 : err?.message || err?.toString?.() || 'Permission denied or camera busy';
 
@@ -52,6 +55,7 @@ const QRScanner = ({ onScanPromise, onClose }) => {
         }
     }, [stopScanner]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Start scanner on mount and when facingMode changes
     useEffect(() => {
         isMountedRef.current = true;
         startScanner(facingMode);
@@ -61,13 +65,6 @@ const QRScanner = ({ onScanPromise, onClose }) => {
             stopScanner();
         };
     }, [facingMode]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Close on Escape key
-    useEffect(() => {
-        const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', handleKey);
-        return () => document.removeEventListener('keydown', handleKey);
-    }, [onClose]);
 
     const playBeep = () => {
         try {
@@ -149,27 +146,26 @@ const QRScanner = ({ onScanPromise, onClose }) => {
                             <Camera size={16} className="text-blue-600" />
                         </div>
                         <div>
-                            <h3 id="qr-scanner-title" className="font-bold text-slate-900 text-sm">Scan Student QR</h3>
+                            <h3 className="font-bold text-slate-900 text-sm">Scan Student QR</h3>
                             <p className="text-[11px] text-slate-400">
-                                <span aria-hidden="true">{facingMode === 'environment' ? '📷' : '🤳'}</span>
-                                {facingMode === 'environment' ? ' Back camera' : ' Front camera'}
+                                {facingMode === 'environment' ? '📷 Back camera' : '🤳 Front camera'}
                             </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
+                        {/* Flip camera button */}
                         <button
                             onClick={handleFlip}
-                            aria-label="Flip camera"
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                            title="Switch camera"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition"
                         >
-                            <FlipHorizontal size={17} aria-hidden="true" />
+                            <FlipHorizontal size={17} />
                         </button>
                         <button
                             onClick={onClose}
-                            aria-label="Close scanner"
-                            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
                         >
-                            <X size={18} aria-hidden="true" />
+                            <X size={18} />
                         </button>
                     </div>
                 </div>
@@ -180,29 +176,30 @@ const QRScanner = ({ onScanPromise, onClose }) => {
 
                     {/* Scanning guides */}
                     {!isProcessing && !lastScanned && !error && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div className="relative w-52 h-52">
                                 <div className="absolute top-0 left-0 w-8 h-8" style={{ borderTop: '3px solid #60a5fa', borderLeft: '3px solid #60a5fa', borderRadius: '6px 0 0 0' }} />
                                 <div className="absolute top-0 right-0 w-8 h-8" style={{ borderTop: '3px solid #60a5fa', borderRight: '3px solid #60a5fa', borderRadius: '0 6px 0 0' }} />
                                 <div className="absolute bottom-0 left-0 w-8 h-8" style={{ borderBottom: '3px solid #60a5fa', borderLeft: '3px solid #60a5fa', borderRadius: '0 0 0 6px' }} />
                                 <div className="absolute bottom-0 right-0 w-8 h-8" style={{ borderBottom: '3px solid #60a5fa', borderRight: '3px solid #60a5fa', borderRadius: '0 0 6px 0' }} />
-                                <div className="absolute left-2 right-2 h-0.5 bg-blue-400/70 top-1/2 motion-safe:animate-pulse" />
+                                {/* Scanning line */}
+                                <div className="absolute left-2 right-2 h-0.5 bg-blue-400/70 top-1/2 animate-pulse" />
                             </div>
                         </div>
                     )}
 
                     {/* Starting overlay */}
                     {starting && !error && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 z-10" role="status" aria-live="polite">
-                            <div className="w-8 h-8 border-4 border-t-blue-400 border-white/20 rounded-full motion-safe:animate-spin mb-2" aria-hidden="true" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 z-10">
+                            <div className="w-8 h-8 border-4 border-t-blue-400 border-white/20 rounded-full animate-spin mb-2" />
                             <p className="text-slate-300 text-xs">Starting camera...</p>
                         </div>
                     )}
 
                     {/* Processing overlay */}
                     {isProcessing && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10" role="status" aria-live="polite">
-                            <div className="w-10 h-10 border-4 border-t-white border-white/20 rounded-full motion-safe:animate-spin mb-3" aria-hidden="true" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10">
+                            <div className="w-10 h-10 border-4 border-t-white border-white/20 rounded-full animate-spin mb-3" />
                             <span className="text-white text-sm font-semibold">Marking attendance...</span>
                         </div>
                     )}
@@ -217,30 +214,28 @@ const QRScanner = ({ onScanPromise, onClose }) => {
                             </div>
                             <p className="text-white font-bold text-base">{lastScanned.name}</p>
                             <p className="text-emerald-100 text-xs mt-1 font-mono">{lastScanned.id}</p>
-                            <p className="text-emerald-200 text-xs mt-3 motion-safe:animate-pulse">Resuming in 2s...</p>
+                            <p className="text-emerald-200 text-xs mt-3 animate-pulse">Resuming in 2s...</p>
                         </div>
                     )}
 
                     {/* Camera error overlay */}
                     {error && !isProcessing && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 z-10 p-4" role="alert">
-                            <CameraOff size={32} className="text-red-400 mb-3" aria-hidden="true" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 z-10 p-4">
+                            <CameraOff size={32} className="text-red-400 mb-3" />
                             <p className="text-white text-xs text-center mb-1 font-semibold">Camera Error</p>
-                            <p className="text-slate-200 text-[11px] text-center mb-4 leading-relaxed">{error}</p>
+                            <p className="text-slate-400 text-[11px] text-center mb-4 leading-relaxed">{error}</p>
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleRetry}
-                                    aria-label="Retry camera"
-                                    className="flex items-center gap-1.5 px-4 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg"
                                 >
-                                    <RefreshCw size={12} aria-hidden="true" /> Retry
+                                    <RefreshCw size={12} /> Retry
                                 </button>
                                 <button
                                     onClick={handleFlip}
-                                    aria-label={`Try ${facingMode === 'environment' ? 'front' : 'back'} camera`}
-                                    className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-700 text-white text-xs font-bold rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-700 text-white text-xs font-bold rounded-lg"
                                 >
-                                    <FlipHorizontal size={12} aria-hidden="true" />
+                                    <FlipHorizontal size={12} />
                                     Try {facingMode === 'environment' ? 'Front' : 'Back'}
                                 </button>
                             </div>

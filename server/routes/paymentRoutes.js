@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const { uploadPayment, getPendingPayments, verifyPayment, getMyPayments, updatePaymentReference, generatePayHereHash } = require('../controllers/paymentController');
+const { uploadPayment, getPendingPayments, verifyPayment, getMyPayments, updatePaymentReference, generatePayHereHash, payhereComplete } = require('../controllers/paymentController');
 const { verifyToken, verifyRole } = require('../middleware/authMiddleware');
 
 // Multer Configuration
@@ -33,6 +33,7 @@ router.post('/hash', verifyToken, generatePayHereHash);
 router.post('/upload', verifyToken, verifyRole(['parent']), upload.single('receipt'), uploadPayment);
 router.get('/pending', verifyToken, verifyRole(['admin']), getPendingPayments);
 router.put('/verify', verifyToken, verifyRole(['admin']), verifyPayment);
+router.put('/payhere-complete', verifyToken, verifyRole(['parent']), payhereComplete);
 router.get('/history', verifyToken, verifyRole(['parent']), getMyPayments);
 router.put('/:paymentId/reference', verifyToken, verifyRole(['parent']), updatePaymentReference);
 

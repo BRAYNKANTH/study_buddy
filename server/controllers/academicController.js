@@ -87,16 +87,32 @@ const getSubjects = async (req, res) => {
 };
 
 // Enter Marks (Tutor) - Single
+// Fixed: was generating a new MarkID each call so ON DUPLICATE KEY never triggered → duplicate marks
 const enterMarks = async (req, res) => {
     const { examId, studentId, marks, remarks } = req.body;
-    // Teacher verification is done via middleware, but we don't store TeacherID in Marks table as per schema
 
     try {
-        const markId = 'M' + Date.now().toString().slice(-6);
-        await db.query(
-            "INSERT INTO Marks (MarkID, ExamID, StudentID, Marks, Remarks, UploadDate) VALUES (?, ?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE Marks = ?, Remarks = ?",
-            [markId, examId, studentId, marks, remarks, marks, remarks]
+        // Check if a mark already exists for this (ExamID, StudentID) pair
+        const [existing] = await db.query(
+            "SELECT MarkID FROM Marks WHERE ExamID = ? AND StudentID = ?",
+            [examId, studentId]
         );
+
+        if (existing.length > 0) {
+            // Update the existing record
+            await db.query(
+                "UPDATE Marks SET Marks = ?, Remarks = ?, UploadDate = NOW() WHERE ExamID = ? AND StudentID = ?",
+                [marks, remarks || '', examId, studentId]
+            );
+        } else {
+            // Insert new record
+            const markId = 'M' + Date.now().toString().slice(-6);
+            await db.query(
+                "INSERT INTO Marks (MarkID, ExamID, StudentID, Marks, Remarks, UploadDate) VALUES (?, ?, ?, ?, ?, NOW())",
+                [markId, examId, studentId, marks, remarks || '']
+            );
+        }
+
         res.json({ message: "Marks entered successfully" });
     } catch (err) {
         console.error(err);
@@ -113,21 +129,44 @@ const enterBatchMarks = async (req, res) => {
     }
 
     try {
-        // Use a transaction or Promise.all. Simple loop for now.
+        // Fixed: was using studentId.slice(-4) for MarkID causing collisions.
+        // Now checks (ExamID, StudentID) pair explicitly before insert/update.
         for (const data of marksData) {
-            const markId = 'M_' + examId + '_' + data.studentId.slice(-4);
-            // UPSERT logic
-            await db.query(
-                `INSERT INTO Marks (MarkID, ExamID, StudentID, Marks, Remarks, UploadDate)
-                 VALUES (?, ?, ?, ?, ?, NOW()) AS new_vals
-                 ON DUPLICATE KEY UPDATE Marks = new_vals.Marks, Remarks = new_vals.Remarks`,
-                [markId, examId, data.studentId, data.marks, data.remarks || '']
+            const [existing] = await db.query(
+                "SELECT MarkID FROM Marks WHERE ExamID = ? AND StudentID = ?",
+                [examId, data.studentId]
             );
+
+            if (existing.length > 0) {
+                await db.query(
+                    "UPDATE Marks SET Marks = ?, Remarks = ?, UploadDate = NOW() WHERE ExamID = ? AND StudentID = ?",
+                    [data.marks, data.remarks || '', examId, data.studentId]
+                );
+            } else {
+                // Deterministic MarkID using full studentId (safe up to VARCHAR 50)
+                const markId = 'M_' + examId.slice(-6) + '_' + data.studentId;
+                await db.query(
+                    "INSERT INTO Marks (MarkID, ExamID, StudentID, Marks, Remarks, UploadDate) VALUES (?, ?, ?, ?, ?, NOW())",
+                    [markId, examId, data.studentId, data.marks, data.remarks || '']
+                );
+            }
         }
         res.json({ message: "Batch marks updated successfully" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error updating batch marks" });
+    }
+};
+
+// Get Exam Marks (Tutor)
+const getExamMarks = async (req, res) => {
+    const { examId } = req.params;
+    try {
+        const [marks] = await db.query("SELECT * FROM Marks WHERE ExamID = ?", [examId]);
+        res.json(marks);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error fetching exam marks" });
     }
 };
 
@@ -172,14 +211,16 @@ const getEnrolledSubjects = async (req, res) => {
     const { studentId } = req.params;
     try {
         const [subjects] = await db.query(`
-            SELECT s.SubjectID, s.SubjectName, u.FullName as TeacherName, u.UserID as TeacherID
+            SELECT s.SubjectID, s.SubjectName,
+                   ANY_VALUE(u.FullName) as TeacherName,
+                   ANY_VALUE(u.UserID)   as TeacherID
             FROM Enrollment e
             JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
             JOIN Subject s ON sg.SubjectID = s.SubjectID
             LEFT JOIN TeacherSubject ts ON s.SubjectID = ts.SubjectID
             LEFT JOIN User u ON ts.TeacherID = u.UserID AND u.Role = 'teacher'
             WHERE e.StudentID = ?
-            GROUP BY s.SubjectID
+            GROUP BY s.SubjectID, s.SubjectName
             `, [studentId]);
         res.json(subjects);
     } catch (err) {
@@ -418,16 +459,36 @@ const uploadStudyMaterial = async (req, res) => {
 };
 
 // Download Study Material (Force Download)
+// Fixed: added DB verification to prevent unauthorized/directory-traversal downloads
 const downloadMaterial = async (req, res) => {
     const { filename } = req.params;
-    const filePath = path.join(__dirname, '../uploads/materials', filename);
 
-    res.download(filePath, (err) => {
-        if (err) {
-            console.error("Download error:", err);
-            res.status(404).json({ message: "File not found" });
+    // Security: verify the file actually exists in the DB before serving it
+    // This also prevents directory traversal (e.g. ../../etc/passwd)
+    try {
+        const [mat] = await db.query(
+            "SELECT MaterialID, Title, FileName FROM StudyMaterial WHERE FileName = ?",
+            [filename]
+        );
+
+        if (mat.length === 0) {
+            return res.status(404).json({ message: "Material not found" });
         }
-    });
+
+        // Sanitise: only allow safe filename characters (no path separators)
+        const safeFilename = path.basename(filename);
+        const filePath = path.join(__dirname, '../uploads/materials', safeFilename);
+
+        res.download(filePath, mat[0].Title || safeFilename, (err) => {
+            if (err && !res.headersSent) {
+                console.error("Download error:", err);
+                res.status(404).json({ message: "File not found on disk" });
+            }
+        });
+    } catch (err) {
+        console.error("Download material error:", err);
+        res.status(500).json({ message: "Error downloading material" });
+    }
 };
 
 // Create Subject (Admin)
@@ -471,9 +532,39 @@ const createSubject = async (req, res) => {
 };
 
 // Delete Subject
+// Fixed: now checks for dependent enrollments/sessions before deleting
 const deleteSubject = async (req, res) => {
     const { subjectId } = req.params;
     try {
+        // Block if students are enrolled in this subject
+        const [[{ enrollCount }]] = await db.query(`
+            SELECT COUNT(*) as enrollCount
+            FROM Enrollment e
+            JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
+            WHERE sg.SubjectID = ?
+        `, [subjectId]);
+
+        if (enrollCount > 0) {
+            return res.status(400).json({
+                message: `Cannot delete: ${enrollCount} student(s) are enrolled in this subject. Unenroll them first.`
+            });
+        }
+
+        // Block if sessions exist for this subject
+        const [[{ sessionCount }]] = await db.query(`
+            SELECT COUNT(*) as sessionCount
+            FROM Session s
+            JOIN SubjectGrade sg ON s.SubjectGradeID = sg.SubjectGradeID
+            WHERE sg.SubjectID = ?
+        `, [subjectId]);
+
+        if (sessionCount > 0) {
+            return res.status(400).json({
+                message: `Cannot delete: ${sessionCount} session(s) are linked to this subject. Remove them first.`
+            });
+        }
+
+        // Safe to delete (SubjectGrade cascades via FK ON DELETE CASCADE)
         await db.query("DELETE FROM Subject WHERE SubjectID = ?", [subjectId]);
         res.json({ message: "Subject deleted successfully" });
     } catch (err) {
@@ -538,4 +629,4 @@ const deleteTimetableEntry = async (req, res) => {
     }
 };
 
-module.exports = { createExam, getExams, enterMarks, enterBatchMarks, getStudentResults, getSubjects, getEnrolledSubjects, getStudyMaterials, getStudentTimetable, createSession, getAllSessions, enrollStudent, unenrollStudent, getTeacherTimetable, uploadStudyMaterial, downloadMaterial, createSubject, deleteSubject, addToTimetable, getAllTimetable, deleteTimetableEntry };
+module.exports = { createExam, getExams, enterMarks, enterBatchMarks, getExamMarks, getStudentResults, getSubjects, getEnrolledSubjects, getStudyMaterials, getStudentTimetable, createSession, getAllSessions, enrollStudent, unenrollStudent, getTeacherTimetable, uploadStudyMaterial, downloadMaterial, createSubject, deleteSubject, addToTimetable, getAllTimetable, deleteTimetableEntry };

@@ -11,10 +11,12 @@ import NotificationCenter from './NotificationCenter';
  *   extra        — any extra JSX to render in the right slot
  */
 const PageHeader = ({ title, subtitle, onLogout, onSettings, extra }) => (
-    <div className="relative overflow-hidden rounded-2xl bg-blue-600 shadow-lg shadow-blue-500/20 p-4 md:p-6 flex flex-row justify-between items-center">
-        {/* Decorative blobs */}
-        <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-32 h-32 bg-blue-500/30 rounded-full blur-2xl pointer-events-none" />
+    <div className="relative rounded-2xl bg-blue-600 shadow-lg shadow-blue-500/20 p-4 md:p-6 flex flex-row justify-between items-center">
+        {/* Decorative blobs limited to header bounds */}
+        <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+            <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-1/3 w-32 h-32 bg-blue-500/30 rounded-full blur-2xl" />
+        </div>
 
         {/* Left — title */}
         <div className="relative z-10 min-w-0">
@@ -29,10 +31,11 @@ const PageHeader = ({ title, subtitle, onLogout, onSettings, extra }) => (
             {onSettings && (
                 <button
                     onClick={onSettings}
-                    className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl transition text-sm font-medium"
+                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl transition text-sm font-medium"
+                    aria-label="Settings"
                 >
                     <Settings size={15} />
-                    <span>Settings</span>
+                    <span className="hidden sm:inline">Settings</span>
                 </button>
             )}
             <button

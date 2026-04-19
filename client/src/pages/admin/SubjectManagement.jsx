@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import { SkeletonTable } from '../../components/SkeletonCard';
+import EmptyState from '../../components/EmptyState';
 
 const SubjectManagement = () => {
     const [subjects, setSubjects] = useState([]);
@@ -133,7 +135,7 @@ const SubjectManagement = () => {
             {/* Subject List */}
             <div className="glass-card p-6 overflow-x-auto bg-white border border-slate-200 shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Subject Library</h3>
-                {loading ? <p className="text-slate-500">Loading...</p> : (
+                {loading ? <SkeletonTable rows={4} cols={4} /> : (
                     <table className="w-full text-left text-slate-700">
                         <thead>
                             <tr className="border-b border-slate-200 text-slate-500 text-sm uppercase tracking-wide bg-slate-50">
@@ -146,6 +148,13 @@ const SubjectManagement = () => {
                             </tr>
                         </thead>
                         <tbody>
+                            {subjects.length === 0 && (
+                                <tr>
+                                    <td colSpan="6">
+                                        <EmptyState icon="📚" title="No Subjects Added" subtitle="Add your first subject using the form above." />
+                                    </td>
+                                </tr>
+                            )}
                             {subjects.map(s => (
                                 <tr key={s.SubjectID} className="border-b border-slate-100 hover:bg-slate-50 transition">
                                     <td className="p-3 font-mono text-sm text-slate-500">{s.SubjectID}</td>

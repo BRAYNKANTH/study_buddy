@@ -3,8 +3,8 @@ const router = express.Router();
 const {
     getAllTutors, addTutor,
     getAllParents, addParent,
-    getAllStudents, addStudent, registerStudent, deleteStudent, // Single line with all student functions
-    getMyChildren, deleteUser
+    getAllStudents, addStudent, registerStudent, deleteStudent,
+    getMyChildren, deleteUser, getAdminStats
 } = require('../controllers/userController');
 const { verifyToken, verifyRole } = require('../middleware/authMiddleware');
 const { addTutorValidation, addStudentValidation } = require('../middleware/validationMiddleware');
@@ -23,6 +23,9 @@ router.get('/students', verifyToken, verifyRole(['admin', 'parent']), getAllStud
 router.post('/students', verifyToken, verifyRole(['admin']), addStudent);
 router.post('/parent/students', verifyToken, verifyRole(['parent']), addStudentValidation, registerStudent); // Parent adding their own child
 router.delete('/student/:id', verifyToken, verifyRole(['admin', 'parent']), deleteStudent); // New Route - Admin or Parent can delete a student
+
+// Admin Stats
+router.get('/stats', verifyToken, verifyRole(['admin']), getAdminStats);
 
 // General User Management
 router.delete('/:userId', verifyToken, verifyRole(['admin']), deleteUser);

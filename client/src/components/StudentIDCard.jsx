@@ -10,9 +10,11 @@ const StudentIDCard = ({ student, onClose }) => {
         try {
             const canvas = await html2canvas(cardRef.current, {
                 scale: 4,
-                backgroundColor: null,
+                backgroundColor: '#ffffff',
                 useCORS: true,
                 logging: false,
+                scrollX: 0,
+                scrollY: 0,
             });
             const image = canvas.toDataURL('image/png');
             const link = document.createElement('a');
@@ -43,134 +45,148 @@ const StudentIDCard = ({ student, onClose }) => {
                 </div>
 
                 {/* ── ID CARD ─────────────────────────────────────────── */}
-                <div className="flex justify-center mb-5">
+                <div className="flex justify-center mb-5 w-full overflow-x-auto">
+                    <div style={{ transform: 'scale(1)', transformOrigin: 'top center' }} className="w-full flex justify-center">
                     <div
                         ref={cardRef}
                         style={{
                             width: '380px',
+                            minWidth: '380px',
+                            maxWidth: '380px',
                             height: '240px',
+                            minHeight: '240px',
+                            maxHeight: '240px',
                             borderRadius: '14px',
                             overflow: 'hidden',
                             fontFamily: "'Outfit', 'Inter', sans-serif",
                             position: 'relative',
                             boxShadow: '0 8px 32px rgba(37,99,235,0.18)',
-                            background: '#fff',
+                            background: '#ffffff',
                         }}
                     >
-                        {/* ── LEFT STRIPE (dark blue) ── */}
+                        {/* ── LEFT STRIPE (Solid Navy) ── */}
                         <div style={{
                             position: 'absolute', left: 0, top: 0, bottom: 0,
-                            width: '110px',
-                            background: 'linear-gradient(180deg, #1e3a8a 0%, #2563eb 100%)',
+                            width: '120px',
+                            background: '#0f172a',
                             display: 'flex', flexDirection: 'column',
                             alignItems: 'center', justifyContent: 'center',
-                            gap: '10px', padding: '16px 10px',
+                            padding: '16px 12px',
+                            borderTopLeftRadius: '14px',
+                            borderBottomLeftRadius: '14px',
                         }}>
                             {/* School Monogram */}
                             <div style={{
-                                width: '52px', height: '52px', borderRadius: '50%',
-                                background: 'rgba(255,255,255,0.15)',
-                                border: '2px solid rgba(255,255,255,0.35)',
+                                width: '56px', height: '56px', borderRadius: '50%',
+                                background: '#1e293b',
+                                border: '2px solid #334155',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                marginBottom: '14px'
                             }}>
-                                <span style={{ fontSize: '22px', fontWeight: 900, color: '#fff', letterSpacing: '-1px' }}>T</span>
+                                <span style={{ fontSize: '28px', fontWeight: 900, color: '#fff', letterSpacing: '-1px' }}>T</span>
                             </div>
 
                             {/* School name vertical */}
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ color: '#bfdbfe', fontSize: '8px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                                <div style={{ color: '#fff', fontSize: '10px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
                                     Theebam
                                 </div>
-                                <div style={{ color: 'rgba(191,219,254,0.7)', fontSize: '7px', letterSpacing: '0.5px' }}>
+                                <div style={{ color: '#94a3b8', fontSize: '7px', letterSpacing: '0.5px', marginTop: '2px' }}>
                                     Education Centre
                                 </div>
                             </div>
 
                             {/* Grade badge */}
                             <div style={{
-                                background: 'rgba(255,255,255,0.2)',
-                                border: '1px solid rgba(255,255,255,0.35)',
-                                borderRadius: '8px', padding: '4px 10px',
+                                background: '#1e293b',
+                                border: '1px solid #334155',
+                                borderRadius: '8px', padding: '6px 0',
                                 textAlign: 'center',
+                                width: '100%',
                             }}>
-                                <div style={{ color: 'rgba(191,219,254,0.8)', fontSize: '7px', fontWeight: 600, letterSpacing: '0.5px' }}>GRADE</div>
-                                <div style={{ color: '#fff', fontSize: '18px', fontWeight: 900, lineHeight: 1 }}>{student.Grade}</div>
+                                <div style={{ color: '#94a3b8', fontSize: '8px', fontWeight: 700, letterSpacing: '1px' }}>GRADE</div>
+                                <div style={{ color: '#fff', fontSize: '22px', fontWeight: 900, lineHeight: 1, marginTop: '2px' }}>{student.Grade}</div>
                             </div>
                         </div>
 
                         {/* ── MAIN BODY ── */}
                         <div style={{
-                            position: 'absolute', left: '110px', right: 0, top: 0, bottom: 0,
+                            position: 'absolute', left: '120px', right: 0, top: 0, bottom: 0,
                             background: '#fff',
                             display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                            padding: '16px 16px 12px 18px',
+                            padding: '16px 20px',
+                            borderTopRightRadius: '14px',
+                            borderBottomRightRadius: '14px',
                         }}>
                             {/* Top section */}
                             <div>
-                                {/* Card type label */}
                                 <div style={{
                                     display: 'inline-block',
-                                    background: '#eff6ff', border: '1px solid #bfdbfe',
-                                    borderRadius: '20px', padding: '2px 10px',
-                                    fontSize: '8px', fontWeight: 700,
-                                    color: '#2563eb', letterSpacing: '1px',
-                                    textTransform: 'uppercase', marginBottom: '8px',
+                                    background: '#f1f5f9', border: '1px solid #e2e8f0',
+                                    borderRadius: '6px', padding: '4px 10px',
+                                    fontSize: '9px', fontWeight: 800,
+                                    color: '#334155', letterSpacing: '1px',
+                                    textTransform: 'uppercase', marginBottom: '2px',
                                 }}>
-                                    Student ID
+                                    Student ID Card
                                 </div>
 
                                 {/* Student Name */}
                                 <div style={{
-                                    fontSize: '17px', fontWeight: 800,
-                                    color: '#0f172a', lineHeight: 1.2,
-                                    maxWidth: '170px',
+                                    fontSize: '22px', fontWeight: 900,
+                                    color: '#0f172a', lineHeight: 1,
+                                    paddingTop: '6px', // Crucial spacer to prevent text bounding box clipping the top
+                                    paddingBottom: '2px',
                                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                    maxWidth: '220px',
                                 }}>
                                     {student.StudentName}
                                 </div>
 
                                 {/* Student ID */}
                                 <div style={{
-                                    marginTop: '4px',
-                                    fontFamily: 'monospace', fontSize: '11px',
-                                    color: '#64748b', letterSpacing: '1px',
-                                    fontWeight: 600,
+                                    fontFamily: 'monospace', fontSize: '13px',
+                                    color: '#2563eb', letterSpacing: '2px',
+                                    fontWeight: 700,
                                 }}>
                                     {student.StudentID}
                                 </div>
                             </div>
 
                             {/* Middle info row */}
-                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
                                 <div>
-                                    <div style={{ fontSize: '7px', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Academic Year</div>
-                                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>{new Date().getFullYear()}</div>
+                                    <div style={{ fontSize: '8px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px' }}>Academic Year</div>
+                                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>{new Date().getFullYear()}</div>
                                 </div>
+                                <div style={{ width: '1px', height: '20px', background: '#e2e8f0' }}></div>
                                 <div>
-                                    <div style={{ fontSize: '7px', color: '#94a3b8', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Status</div>
-                                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#10b981' }}>● Active</div>
+                                    <div style={{ fontSize: '8px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px' }}>Status</div>
+                                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div>
+                                        Active
+                                    </div>
                                 </div>
                             </div>
 
                             {/* QR + bottom strip */}
                             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                                 {/* Bottom label */}
-                                <div style={{ fontSize: '7px', color: '#94a3b8', maxWidth: '120px', lineHeight: 1.4 }}>
-                                    Scan QR code to mark attendance.<br />
-                                    <span style={{ color: '#cbd5e1' }}>theebam.edu.lk</span>
+                                <div style={{ fontSize: '9px', color: '#94a3b8', lineHeight: 1.5, fontWeight: 500, paddingBottom: '2px' }}>
+                                    Scan QR to mark<br />attendance.
+                                    <div style={{ color: '#2563eb', fontWeight: 700, marginTop: '2px' }}>theebam.edu.lk</div>
                                 </div>
 
                                 {/* QR Code */}
                                 <div style={{
                                     background: '#fff',
-                                    border: '1.5px solid #e2e8f0',
+                                    border: '1px solid #e2e8f0',
                                     borderRadius: '8px',
                                     padding: '5px',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                                 }}>
                                     <QRCodeSVG
                                         value={student.StudentID}
-                                        size={80}
+                                        size={56}
                                         level="H"
                                         includeMargin={false}
                                         fgColor="#0f172a"
@@ -181,10 +197,13 @@ const StudentIDCard = ({ student, onClose }) => {
 
                         {/* ── BOTTOM ACCENT BAR ── */}
                         <div style={{
-                            position: 'absolute', bottom: 0, left: '110px', right: 0,
-                            height: '4px',
-                            background: 'linear-gradient(90deg, #2563eb, #6366f1, #10b981)',
+                            position: 'absolute', bottom: 0, left: '120px', right: 0,
+                            height: '6px',
+                            background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #10b981)',
+                            borderBottomRightRadius: '14px',
+                            zIndex: 10
                         }} />
+                    </div>
                     </div>
                 </div>
 

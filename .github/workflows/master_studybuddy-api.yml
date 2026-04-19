@@ -1,0 +1,36 @@
+name: Deploy Node.js to Azure Web App - studybuddy-api
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies
+        working-directory: ./server
+        run: npm install --production
+
+      - name: Zip server contents (not the folder itself)
+        run: |
+          cd server
+          zip -r ../server.zip .
+
+      - name: Deploy via ZIP to Azure
+        run: |
+          curl -X POST \
+            "https://studybuddy-api-esadgyc7f2djdybv.scm.centralindia-01.azurewebsites.net/api/zipdeploy" \
+            -u '$studybuddy-api:v1spE2czFS01DxwHtHQnHkriZFguYnWhtb3xPvKxkGW25impAs1DWLktYQr1' \
+            --data-binary @server.zip \
+            -H "Content-Type: application/zip"

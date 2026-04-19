@@ -6,60 +6,47 @@ const { createNotification } = require('./notificationController');
 const generatePayHereHash = async (req, res) => {
     const { order_id, amount, currency } = req.body;
     const merchantId = process.env.PAYHERE_MERCHANT_ID;
-    const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET;
+    const merchantSecret = process.env.PAYHERE_SECRET || process.env.PAYHERE_MERCHANT_SECRET;
 
     if (!merchantId || !merchantSecret) {
         return res.status(500).json({ message: "PayHere configuration missing" });
     }
 
-    // Hash Formula: md5(merchant_id + order_id + amount_formatted + currency + md5(merchant_secret).toUpperCase()).toUpperCase();
-
-    // 1. Format amount to 2 decimal places
-    const amountFormatted = parseFloat(amount).toLocaleString('en-us', { minimumFractionDigits: 2 }).replace(/,/g, '');
-
-    // 2. Hash the secret
+    // Use toFixed(2) — more reliable than toLocaleString across Node environments
+    const amountFormatted = parseFloat(amount).toFixed(2);
     const hashedSecret = crypto.createHash('md5').update(merchantSecret).digest('hex').toUpperCase();
-
-    // 3. Create string to hash
-    const hashString = merchantId + order_id + amountFormatted + currency + hashedSecret;
-
-    // 4. Final Hash
+    const hashString = `${merchantId}${order_id}${amountFormatted}${currency}${hashedSecret}`;
     const hash = crypto.createHash('md5').update(hashString).digest('hex').toUpperCase();
 
-    res.json({ hash, merchantId, amountFormatted }); // Return formatted amount
+    // Debug log — remove after payment is confirmed working
+    console.log('[PayHere Hash Debug]', {
+        merchantId,
+        order_id,
+        amountFormatted,
+        currency,
+        secretLength: merchantSecret.length,
+        hashedSecret,
+        hashString,
+        hash
+    });
+
+    res.json({ hash, merchantId, amountFormatted });
 };
 
 // Upload Payment (Parent)
+// Fixed: was concatenating filename into ReferenceNo field — now stored separately in ReceiptFile column
 const uploadPayment = async (req, res) => {
-    const { studentId, month, referenceNo, amount } = req.body; // month is "January 2026"
-    let finalRef = referenceNo || '';
-
-    if (req.file) {
-        finalRef += ` [FILE: ${req.file.filename}]`;
-    }
+    const { studentId, month, referenceNo, amount } = req.body;
+    const receiptFile = req.file ? req.file.filename : null;
 
     try {
-        // Resolve CycleID
-        let cycleId;
-        // Use provided month or current
-        const cycleName = month || new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-
-        const [cycles] = await db.query("SELECT CycleID FROM BillingCycle WHERE CycleName = ?", [cycleName]);
-        if (cycles.length > 0) {
-            cycleId = cycles[0].CycleID;
-        } else {
-            // Create Cycle auto-fix
-            const date = new Date();
-            const startDetails = new Date(date.getFullYear(), date.getMonth(), 1);
-            const endDetails = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-            const [insertResult] = await db.query("INSERT INTO BillingCycle (CycleName, StartDate, EndDate) VALUES (?, ?, ?)", [cycleName, startDetails, endDetails]);
-            cycleId = insertResult.insertId;
-        }
-
+        const monthLabel = month || new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
         const paymentId = 'PM' + Date.now().toString().slice(-6);
+        const refNo = referenceNo || 'PENDING_UPLOAD';
+
         await db.query(
-            "INSERT INTO Payment (PaymentID, StudentID, CycleID, ReferenceNo, Amount, PaymentDate, Status) VALUES (?, ?, ?, ?, ?, NOW(), 'Pending')",
-            [paymentId, studentId, cycleId, finalRef, amount]
+            "INSERT INTO Payment (PaymentID, StudentID, Month, ReferenceNo, Amount, ReceiptFile, PaymentDate, Status) VALUES (?, ?, ?, ?, ?, ?, NOW(), 'Pending')",
+            [paymentId, studentId, monthLabel, refNo, amount, receiptFile]
         );
         res.status(201).json({ message: "Payment submitted for verification", paymentId });
     } catch (err) {
@@ -72,8 +59,8 @@ const uploadPayment = async (req, res) => {
 const getPendingPayments = async (req, res) => {
     try {
         const [payments] = await db.query(`
-            SELECT p.*, s.StudentName, s.IsApproved, pa.FullName as ParentName 
-            FROM Payment p 
+            SELECT p.*, s.StudentName, s.IsApproved, pa.FullName as ParentName
+            FROM Payment p
             JOIN Student s ON p.StudentID = s.StudentID
             JOIN User pa ON s.ParentID = pa.UserID
             WHERE p.Status = 'Pending'
@@ -84,9 +71,9 @@ const getPendingPayments = async (req, res) => {
     }
 };
 
-// Verify Payment (Admin or System Auto-Verify)
+// Verify Payment (Admin)
 const verifyPayment = async (req, res) => {
-    const { paymentId, status } = req.body; // Status: 'Verified' or 'Rejected'
+    const { paymentId, status } = req.body;
     const { id: userId, role } = req.user;
     const connection = await db.getConnection();
 
@@ -96,7 +83,6 @@ const verifyPayment = async (req, res) => {
         let updateQuery = "UPDATE Payment SET Status = ? WHERE PaymentID = ?";
         let params = [status, paymentId];
 
-        // Only record AdminID if the verifier is an Admin
         if (role === 'admin') {
             updateQuery = "UPDATE Payment SET Status = ?, AdminID = ? WHERE PaymentID = ?";
             params = [status, userId, paymentId];
@@ -105,13 +91,11 @@ const verifyPayment = async (req, res) => {
         await connection.query(updateQuery, params);
 
         if (status === 'Verified') {
-            // Find Student for this payment
             const [rows] = await connection.query("SELECT StudentID FROM Payment WHERE PaymentID = ?", [paymentId]);
             if (rows.length > 0) {
                 const studentId = rows[0].StudentID;
                 await connection.query("UPDATE Student SET IsApproved = TRUE WHERE StudentID = ?", [studentId]);
 
-                // NOTIFICATION: Payment Verified
                 const [student] = await connection.query("SELECT ParentID, StudentName FROM Student WHERE StudentID = ?", [studentId]);
                 if (student.length > 0) {
                     await createNotification(
@@ -123,7 +107,6 @@ const verifyPayment = async (req, res) => {
                 }
             }
         } else if (status === 'Rejected') {
-            // Find Student/Parent to notify rejection
             const [rows] = await connection.query("SELECT s.ParentID, s.StudentName FROM Payment p JOIN Student s ON p.StudentID = s.StudentID WHERE p.PaymentID = ?", [paymentId]);
             if (rows.length > 0) {
                 await createNotification(
@@ -146,14 +129,67 @@ const verifyPayment = async (req, res) => {
     }
 };
 
+// PayHere completion — called by parent after gateway confirms payment
+const payhereComplete = async (req, res) => {
+    const { paymentId } = req.body;
+    const parentId = req.user.id;
+    const connection = await db.getConnection();
+
+    try {
+        await connection.beginTransaction();
+
+        // Security: only allow if payment belongs to this parent's student
+        const [rows] = await connection.query(`
+            SELECT p.PaymentID, p.Status, s.StudentID, s.StudentName, s.IsApproved
+            FROM Payment p
+            JOIN Student s ON p.StudentID = s.StudentID
+            WHERE p.PaymentID = ? AND s.ParentID = ?
+        `, [paymentId, parentId]);
+
+        if (rows.length === 0) {
+            await connection.rollback();
+            return res.status(403).json({ message: "Payment not found or does not belong to you" });
+        }
+
+        const payment = rows[0];
+
+        if (payment.Status === 'Verified') {
+            await connection.rollback();
+            return res.json({ message: "Payment already verified", alreadyVerified: true });
+        }
+
+        await connection.query("UPDATE Payment SET Status = 'Verified' WHERE PaymentID = ?", [paymentId]);
+
+        if (!payment.IsApproved) {
+            await connection.query("UPDATE Student SET IsApproved = TRUE WHERE StudentID = ?", [payment.StudentID]);
+        }
+
+        await createNotification(
+            parentId,
+            'Payment Verified',
+            `Your PayHere payment for ${payment.StudentName} has been confirmed.`,
+            'PAYMENT'
+        );
+
+        await connection.commit();
+        res.json({ message: "Payment verified successfully" });
+    } catch (err) {
+        await connection.rollback();
+        console.error(err);
+        res.status(500).json({ message: "Error completing payment" });
+    } finally {
+        connection.release();
+    }
+};
+
 // Get My Payments (Parent)
 const getMyPayments = async (req, res) => {
     const parentId = req.user.id;
     try {
         const [payments] = await db.query(`
-            SELECT p.*, s.StudentName 
-            FROM Payment p 
-            JOIN Student s ON p.StudentID = s.StudentID 
+            SELECT p.*, s.StudentName
+            FROM Payment p
+            JOIN Student s ON p.StudentID = s.StudentID
             WHERE s.ParentID = ?
             ORDER BY p.PaymentDate DESC
         `, [parentId]);
@@ -163,7 +199,7 @@ const getMyPayments = async (req, res) => {
     }
 };
 
-// Update Payment Reference (For after-registration)
+// Update Payment Reference
 const updatePaymentReference = async (req, res) => {
     const { paymentId } = req.params;
     const { referenceNo } = req.body;
@@ -175,4 +211,4 @@ const updatePaymentReference = async (req, res) => {
     }
 };
 
-module.exports = { uploadPayment, getPendingPayments, verifyPayment, getMyPayments, updatePaymentReference, generatePayHereHash };
+module.exports = { uploadPayment, getPendingPayments, verifyPayment, getMyPayments, updatePaymentReference, generatePayHereHash, payhereComplete };

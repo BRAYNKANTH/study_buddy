@@ -65,7 +65,7 @@ const ChildDashboard = ({ student, onBack }) => {
     }, [tab]);
 
     return (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col animate-fade-in-up">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col">
             {/* Header */}
             <div className="bg-blue-600 p-4 md:p-6 rounded-t-2xl border-b border-blue-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>
@@ -78,14 +78,20 @@ const ChildDashboard = ({ student, onBack }) => {
                         <p className="text-blue-100 text-sm">Grade {student.Grade}</p>
                     </div>
                 </div>
-                <div className="flex space-x-1 bg-white/10 p-1.5 rounded-2xl border border-white/10 overflow-x-auto relative z-10 backdrop-blur-sm">
-                    {['subjects', 'timetable', 'attendance', 'results'].map(t => (
+                <div className="flex gap-1 bg-white/10 p-1.5 rounded-2xl border border-white/10 overflow-x-auto relative z-10 backdrop-blur-sm scrollbar-hide">
+                    {[
+                        { id: 'subjects', label: 'Subjects', icon: '📚' },
+                        { id: 'timetable', label: 'Timetable', icon: '📅' },
+                        { id: 'attendance', label: 'Attendance', icon: '✅' },
+                        { id: 'results', label: 'Results', icon: '📊' },
+                    ].map(t => (
                         <button
-                            key={t}
-                            onClick={() => { setTab(t); setSelectedSubject(null); }}
-                            className={`px-6 py-2.5 rounded-xl text-sm font-bold capitalize transition-all duration-300 whitespace-nowrap ${tab === t ? 'bg-white text-blue-700 shadow-sm' : 'text-blue-50 hover:text-white hover:bg-white/10'}`}
+                            key={t.id}
+                            onClick={() => { setTab(t.id); setSelectedSubject(null); }}
+                            className={`flex items-center gap-1.5 px-3 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-300 ${tab === t.id ? 'bg-white text-blue-700 shadow-sm' : 'text-blue-50 hover:text-white hover:bg-white/10'}`}
                         >
-                            {t}
+                            <span>{t.icon}</span>
+                            <span className="hidden xs:inline sm:inline">{t.label}</span>
                         </button>
                     ))}
                 </div>
@@ -285,72 +291,114 @@ const ChildDashboard = ({ student, onBack }) => {
 
                 {/* ATTENDANCE */}
                 {tab === 'attendance' && (
-                    <div className="overflow-x-auto bg-white rounded-xl border border-slate-200">
+                    <div>
                         {attendance.length === 0 ? (
-                            <div className="p-8 text-center text-slate-400">No attendance records found.</div>
+                            <div className="p-8 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">No attendance records found.</div>
                         ) : (
-                            <table className="w-full text-left text-slate-900 min-w-[480px]">
-                                <thead className="bg-slate-50 border-b border-slate-200">
-                                    <tr>
-                                        <th className="p-4 text-sm font-semibold text-slate-500">Date</th>
-                                        <th className="p-4 text-sm font-semibold text-slate-500">Subject</th>
-                                        <th className="p-4 text-sm font-semibold text-slate-500">Status</th>
-                                        <th className="p-4 text-sm font-semibold text-slate-500">Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
+                            <>
+                                {/* Mobile card view */}
+                                <div className="flex flex-col gap-3 md:hidden">
                                     {attendance.map(atk => (
-                                        <tr key={atk.AttendanceID} className="hover:bg-slate-50 transition">
-                                            <td className="p-4 text-slate-600">{new Date(atk.Date).toLocaleDateString()}</td>
-                                            <td className="p-4 text-slate-600 font-medium">{atk.SubjectName}</td>
-                                            <td className="p-4">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${atk.Status === 'Present' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
-                                                    {atk.Status}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 text-slate-500 text-sm">
-                                                {atk.StartTime?.slice(0, 5)} - {atk.EndTime?.slice(0, 5)}
-                                            </td>
-                                        </tr>
+                                        <div key={atk.AttendanceID} className="bg-white rounded-xl border border-slate-200 p-4 flex justify-between items-center">
+                                            <div>
+                                                <p className="font-semibold text-slate-800">{atk.SubjectName}</p>
+                                                <p className="text-xs text-slate-400 mt-0.5">{new Date(atk.Date).toLocaleDateString()} · {atk.StartTime?.slice(0, 5)} - {atk.EndTime?.slice(0, 5)}</p>
+                                            </div>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${atk.Status === 'Present' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                                                {atk.Status}
+                                            </span>
+                                        </div>
                                     ))}
-                                </tbody>
-                            </table>
+                                </div>
+                                {/* Desktop table view */}
+                                <div className="hidden md:block overflow-x-auto bg-white rounded-xl border border-slate-200">
+                                    <table className="w-full text-left text-slate-900">
+                                        <thead className="bg-slate-50 border-b border-slate-200">
+                                            <tr>
+                                                <th className="p-4 text-sm font-semibold text-slate-500">Date</th>
+                                                <th className="p-4 text-sm font-semibold text-slate-500">Subject</th>
+                                                <th className="p-4 text-sm font-semibold text-slate-500">Status</th>
+                                                <th className="p-4 text-sm font-semibold text-slate-500">Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {attendance.map(atk => (
+                                                <tr key={atk.AttendanceID} className="hover:bg-slate-50 transition">
+                                                    <td className="p-4 text-slate-600">{new Date(atk.Date).toLocaleDateString()}</td>
+                                                    <td className="p-4 text-slate-600 font-medium">{atk.SubjectName}</td>
+                                                    <td className="p-4">
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${atk.Status === 'Present' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                                                            {atk.Status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-slate-500 text-sm">{atk.StartTime?.slice(0, 5)} - {atk.EndTime?.slice(0, 5)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
                         )}
                     </div>
                 )}
 
                 {/* RESULTS */}
                 {tab === 'results' && (
-                    <div className="overflow-x-auto bg-white rounded-xl border border-slate-200">
+                    <div>
                         {results.length === 0 ? (
-                            <div className="p-8 text-center text-slate-400">No exam results found.</div>
+                            <div className="p-8 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">No exam results found.</div>
                         ) : (
-                            <table className="w-full text-left text-slate-900 min-w-[500px]">
-                                <thead className="bg-slate-50 border-b border-slate-200">
-                                    <tr>
-                                        <th className="p-4 text-sm font-semibold text-slate-500">Exam</th>
-                                        <th className="p-4 text-sm font-semibold text-slate-500">Subject</th>
-                                        <th className="p-4 text-sm font-semibold text-slate-500">Marks</th>
-                                        <th className="p-4 text-sm font-semibold text-slate-500">Grade</th>
-                                        <th className="p-4 text-sm font-semibold text-slate-500">Remarks</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
+                            <>
+                                {/* Mobile card view */}
+                                <div className="flex flex-col gap-3 md:hidden">
                                     {results.map(res => (
-                                        <tr key={res.MarkID} className="hover:bg-slate-50 transition">
-                                            <td className="p-4 text-slate-600 font-medium">{res.ExamName}</td>
-                                            <td className="p-4 text-slate-500">{res.SubjectName}</td>
-                                            <td className="p-4 font-bold text-lg">{res.Marks}</td>
-                                            <td className="p-4">
-                                                <span className={`inline-block w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold border ${res.Grade === 'A' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : res.Grade === 'B' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                                                    {res.Grade}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 text-slate-400 italic text-sm">{res.Remarks}</td>
-                                        </tr>
+                                        <div key={res.MarkID} className="bg-white rounded-xl border border-slate-200 p-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p className="font-semibold text-slate-800">{res.ExamName}</p>
+                                                    <p className="text-xs text-slate-400">{res.SubjectName}</p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xl font-bold text-slate-900">{res.Marks}</span>
+                                                    <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold border ${res.Grade === 'A' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : res.Grade === 'B' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                                        {res.Grade}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {res.Remarks && <p className="text-xs text-slate-400 italic">{res.Remarks}</p>}
+                                        </div>
                                     ))}
-                                </tbody>
-                            </table>
+                                </div>
+                                {/* Desktop table view */}
+                                <div className="hidden md:block overflow-x-auto bg-white rounded-xl border border-slate-200">
+                                    <table className="w-full text-left text-slate-900">
+                                        <thead className="bg-slate-50 border-b border-slate-200">
+                                            <tr>
+                                                <th className="p-4 text-sm font-semibold text-slate-500">Exam</th>
+                                                <th className="p-4 text-sm font-semibold text-slate-500">Subject</th>
+                                                <th className="p-4 text-sm font-semibold text-slate-500">Marks</th>
+                                                <th className="p-4 text-sm font-semibold text-slate-500">Grade</th>
+                                                <th className="p-4 text-sm font-semibold text-slate-500">Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {results.map(res => (
+                                                <tr key={res.MarkID} className="hover:bg-slate-50 transition">
+                                                    <td className="p-4 text-slate-600 font-medium">{res.ExamName}</td>
+                                                    <td className="p-4 text-slate-500">{res.SubjectName}</td>
+                                                    <td className="p-4 font-bold text-lg">{res.Marks}</td>
+                                                    <td className="p-4">
+                                                        <span className={`inline-flex w-8 h-8 items-center justify-center rounded-lg text-sm font-bold border ${res.Grade === 'A' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : res.Grade === 'B' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                                                            {res.Grade}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-slate-400 italic text-sm">{res.Remarks}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
                         )}
                     </div>
                 )}

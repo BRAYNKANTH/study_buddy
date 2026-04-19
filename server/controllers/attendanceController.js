@@ -2,12 +2,16 @@ const db = require('../config/db');
 
 // Mark Attendance (Tutor scans Student QR)
 const markAttendance = async (req, res) => {
-    let { studentId, subjectId, status, sessionId } = req.body;
+    let { studentId, subjectId, status, sessionId, startTime, endTime } = req.body;
     const teacherId = req.user.id;
 
-    // SECURITY: Ignore client date. Use Server Date.
+    // SECURITY: Ignore client date. Use Server Date in Sri Lanka time (UTC+5:30).
+    // Azure runs UTC — without this offset, 7:50 PM Sri Lanka = 2:20 PM UTC
+    // and the time-window check would think the session hasn't started.
+    const SL_OFFSET_MS = (5 * 60 + 30) * 60 * 1000; // 330 min in ms
     const now = new Date();
-    const serverDate = now.toISOString().split('T')[0];
+    const nowSL = new Date(now.getTime() + SL_OFFSET_MS);
+    const serverDate = nowSL.toISOString().split('T')[0]; // YYYY-MM-DD in SL time
 
     if (!studentId || !subjectId) {
         return res.status(400).json({ message: "Missing required fields" });
@@ -31,6 +35,35 @@ const markAttendance = async (req, res) => {
             if (explicitSession.length === 0) {
                 return res.status(404).json({ message: "Invalid Session ID or Session mismatch." });
             }
+
+            // ── Time-window check ──────────────────────────────────────────────
+            // Allow scanning from 30 min before start up to 60 min after end.
+            // Skip check for ad-hoc sessions stored with 00:00:00 times.
+            const sess = explicitSession[0];
+            if (sess.StartTime && sess.StartTime !== '00:00:00') {
+                const [sh, sm] = sess.StartTime.toString().slice(0, 5).split(':').map(Number);
+                const [eh, em] = sess.EndTime.toString().slice(0, 5).split(':').map(Number);
+                // Use Sri Lanka local time (same offset applied to nowSL above)
+                const nowMins = nowSL.getUTCHours() * 60 + nowSL.getUTCMinutes();
+                const startMins = sh * 60 + sm;
+                const endMins = eh * 60 + em;
+
+                if (nowMins < startMins - 30) {
+                    const diff = startMins - nowMins;
+                    return res.status(400).json({
+                        message: `Session hasn't started yet. Scanning opens in ${diff} minute${diff !== 1 ? 's' : ''}.`,
+                        code: 'SESSION_NOT_STARTED'
+                    });
+                }
+                if (nowMins > endMins + 60) {
+                    const diff = nowMins - endMins;
+                    return res.status(400).json({
+                        message: `Session ended ${diff} minute${diff !== 1 ? 's' : ''} ago. Attendance window is closed.`,
+                        code: 'SESSION_ENDED'
+                    });
+                }
+            }
+            // ── End time-window check ──────────────────────────────────────────
         }
         else {
             // CASE B: Implicit / Quick Scan OR Virtual Session Confirmation
@@ -46,18 +79,22 @@ const markAttendance = async (req, res) => {
             if (existingSession.length > 0) {
                 sessionId = existingSession[0].SessionID;
             } else {
-                // Create new Session for TODAY
-                console.log(`Creating ad-hoc session for ${serverDate}`);
+                // Create new Session for TODAY (using timetable times if passed from frontend)
+                console.log(`Creating session from timetable slot for ${serverDate}`);
 
                 // Need SubjectGradeID
                 const [sgRows] = await db.query("SELECT SubjectGradeID FROM SubjectGrade WHERE SubjectID = ? AND Grade = ?", [subjectId, studentGrade]);
                 if (sgRows.length === 0) return res.status(400).json({ message: "No Subject-Grade found for this student's grade." });
                 const subjectGradeId = sgRows[0].SubjectGradeID;
 
+                // Use passed times (from timetable slot) or default to 00:00:00
+                const sessionStart = startTime || '00:00:00';
+                const sessionEnd = endTime || '00:00:00';
+
                 sessionId = 'SE' + Date.now().toString().slice(-6);
                 await db.query(
                     "INSERT INTO Session (SessionID, TeacherID, SubjectGradeID, Date, StartTime, EndTime) VALUES (?, ?, ?, ?, ?, ?)",
-                    [sessionId, teacherId, subjectGradeId, serverDate, '00:00:00', '00:00:00']
+                    [sessionId, teacherId, subjectGradeId, serverDate, sessionStart, sessionEnd]
                 );
             }
         }
@@ -109,12 +146,14 @@ const getTeacherSubjects = async (req, res) => {
     }
 };
 
-// Get Teacher's Schedule (Sessions)
+// Get Teacher's Schedule (Sessions) — explicit DB sessions + today's timetable virtual slots
 const getTeacherSessions = async (req, res) => {
     const teacherId = req.user.id;
     try {
+        // 1. Fetch explicit sessions from Session table (include SubjectID)
         const [sessions] = await db.query(`
-            SELECT s.*, sub.SubjectName, sg.Grade
+            SELECT s.SessionID, s.TeacherID, s.SubjectGradeID, s.Date, s.StartTime, s.EndTime,
+                   sub.SubjectName, sub.SubjectID, sg.Grade
             FROM Session s
             JOIN SubjectGrade sg ON s.SubjectGradeID = sg.SubjectGradeID
             JOIN Subject sub ON sg.SubjectID = sub.SubjectID
@@ -122,7 +161,44 @@ const getTeacherSessions = async (req, res) => {
             AND s.Date >= CURRENT_DATE
             ORDER BY s.Date, s.StartTime
         `, [teacherId]);
-        res.json(sessions);
+
+        // 2. Fetch today's timetable entries as virtual sessions
+        const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+        const todayStr  = new Date().toISOString().split('T')[0];
+
+        const [timetable] = await db.query(`
+            SELECT t.TimetableID, t.DayOfWeek, t.StartTime, t.EndTime,
+                   sub.SubjectName, sub.SubjectID, sg.Grade, sg.SubjectGradeID
+            FROM Timetable t
+            JOIN SubjectGrade sg ON t.SubjectGradeID = sg.SubjectGradeID
+            JOIN Subject sub ON sg.SubjectID = sub.SubjectID
+            WHERE t.TeacherID = ? AND t.DayOfWeek = ?
+        `, [teacherId, todayName]);
+
+        // 3. Merge: skip timetable slots that already have an explicit session today
+        const allSessions = [...sessions];
+        for (const slot of timetable) {
+            const alreadyCovered = sessions.some(s => {
+                const sDate = new Date(s.Date).toISOString().split('T')[0];
+                return sDate === todayStr && s.SubjectID === slot.SubjectID && String(s.Grade) === String(slot.Grade);
+            });
+            if (!alreadyCovered) {
+                allSessions.push({
+                    SessionID: `virtual_${todayStr}_${slot.StartTime}_${slot.SubjectID}_${slot.Grade}`,
+                    TeacherID: teacherId,
+                    SubjectGradeID: slot.SubjectGradeID,
+                    Date: todayStr,
+                    StartTime: slot.StartTime,
+                    EndTime: slot.EndTime,
+                    SubjectName: slot.SubjectName,
+                    SubjectID: slot.SubjectID,
+                    Grade: slot.Grade,
+                    IsVirtual: true
+                });
+            }
+        }
+
+        res.json(allSessions);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error fetching sessions" });

@@ -60,7 +60,7 @@ const AddStudent = () => {
                 "merchant_id": merchantId,        // Return URL: where user goes after payment
                 "return_url": window.location.origin + "/parent/dashboard",
                 "cancel_url": window.location.origin + "/parent/dashboard",
-                "notify_url": "https://study-buddy-api.com/api/payments/notify", // Placeholder
+                "notify_url": `${import.meta.env.VITE_API_URL}/payments/notify`,
                 "order_id": orderId,
                 "items": "Student Registration",
                 "amount": amountFormatted, // MUST match the hashed amount string exactly
@@ -82,12 +82,11 @@ const AddStudent = () => {
             window.payhere.onCompleted = async function onCompleted(orderId) {
                 console.log("Payment completed. OrderID:" + orderId);
                 try {
-                    // Verify/Mark as paid via API
-                    await api.put(`/payments/verify`, { paymentId: orderId, status: 'Verified' });
+                    await api.put(`/payments/payhere-complete`, { paymentId: orderId });
                     setPaymentSuccess(true);
                 } catch (e) {
                     console.error(e);
-                    toast.error("Payment verified locally but API update failed. Please contact admin.");
+                    toast.success("Payment received! Your account will be activated shortly.");
                     navigate('/parent/dashboard');
                 }
             };
@@ -264,7 +263,7 @@ Jaffna, Sri Lanka</p>
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 bg-blue-50 transition-colors duration-300">
-            <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-xl rounded-2xl max-w-2xl w-full p-8 animate-fade-in-up">
+            <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow-xl rounded-2xl max-w-2xl w-full p-4 sm:p-6 md:p-8 animate-fade-in-up">
                 <h1 className="text-2xl font-bold text-slate-900 mb-6">Student Registration</h1>
 
                 {/* Step Progress */}

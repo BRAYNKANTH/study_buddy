@@ -229,7 +229,7 @@ const Chat = ({ initialContact, onMessageRead, isEmbedded = false, forcedContact
                                     </div>
                                     <button
                                         onClick={(e) => handleDeleteChat(contact, e)}
-                                        className="p-2 ml-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition flex-shrink-0"
+                                        className="p-2 ml-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full md:opacity-0 md:group-hover:opacity-100 transition flex-shrink-0"
                                         title="Delete Chat"
                                     >
                                         <Trash2 size={14} />
