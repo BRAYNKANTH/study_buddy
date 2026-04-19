@@ -82,7 +82,7 @@ const getChatContacts = async (req, res) => {
         if (userRole === 'teacher') {
             query += `
                 UNION
-                SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'parent' as Role, sub.SubjectName
+                SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'parent' AS Role, sub.SubjectName
                 FROM TeacherSubject ts
                 JOIN Subject sub ON ts.SubjectID = sub.SubjectID
                 JOIN SubjectGrade sg ON sub.SubjectID = sg.SubjectID
@@ -90,7 +90,23 @@ const getChatContacts = async (req, res) => {
                 JOIN Student st ON e.StudentID = st.StudentID
                 JOIN User u ON st.ParentID = u.UserID
                 WHERE ts.TeacherID = ?
-             `;
+            `;
+            params.push(userId);
+        }
+
+        // Parents also see all teachers of their enrolled children (even if no prior chat)
+        if (userRole === 'parent') {
+            query += `
+                UNION
+                SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'teacher' AS Role, sub.SubjectName
+                FROM Student st
+                JOIN Enrollment e ON st.StudentID = e.StudentID
+                JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
+                JOIN TeacherSubject ts ON sg.SubjectID = ts.SubjectID
+                JOIN User u ON ts.TeacherID = u.UserID
+                JOIN Subject sub ON ts.SubjectID = sub.SubjectID
+                WHERE st.ParentID = ?
+            `;
             params.push(userId);
         }
 
@@ -98,7 +114,7 @@ const getChatContacts = async (req, res) => {
 
         if (contacts.length === 0) return res.json([]);
 
-        // For teachers: attach the student list to each parent contact
+        // Enrich parent contacts with student details (for teachers)
         if (userRole === 'teacher') {
             for (let c of contacts) {
                 if (c.Role === 'parent') {
@@ -115,7 +131,24 @@ const getChatContacts = async (req, res) => {
             }
         }
 
-        // Enrich each contact with last message preview and per-contact unread count
+        // Enrich teacher contacts with student details (for parents)
+        if (userRole === 'parent') {
+            for (let c of contacts) {
+                if (c.Role === 'teacher') {
+                    const [students] = await db.query(`
+                        SELECT DISTINCT st.StudentID, st.StudentName, st.Grade
+                        FROM Student st
+                        JOIN Enrollment e ON st.StudentID = e.StudentID
+                        JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
+                        JOIN TeacherSubject ts ON sg.SubjectID = ts.SubjectID
+                        WHERE st.ParentID = ? AND ts.TeacherID = ?
+                    `, [userId, c.ContactID]);
+                    c.Students = students;
+                }
+            }
+        }
+
+        // Attach last message preview + per-contact unread count
         const [summary] = await db.query(`
             SELECT
                 partner_id AS ContactID,
@@ -142,14 +175,13 @@ const getChatContacts = async (req, res) => {
             UnreadCount: Number(summaryMap[c.ContactID]?.UnreadCount || 0),
         }));
 
-        // Sort by most recent conversation first
+        // Sort by most recent conversation first, contacts with no messages go last
         enriched.sort((a, b) => {
             if (!a.LastMessageTime) return 1;
             if (!b.LastMessageTime) return -1;
             return new Date(b.LastMessageTime) - new Date(a.LastMessageTime);
         });
 
-        console.log("Contacts found:", enriched.length);
         res.json(enriched);
     } catch (err) {
         console.error(err);
