@@ -22,8 +22,10 @@ jobs:
         working-directory: ./server
         run: npm install --production
 
-      - name: Zip server folder
-        run: zip -r server.zip ./server
+      - name: Zip server contents (not the folder itself)
+        run: |
+          cd server
+          zip -r ../server.zip .
 
       - name: Deploy via ZIP to Azure
         run: |
