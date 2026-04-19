@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import Chat from '../communication/Chat';
+import { generateReport } from '../../utils/reportGenerator';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -48,6 +49,44 @@ const ChildDashboard = ({ student, onBack }) => {
             const res = await api.get(`/academic/results/${student.StudentID}`);
             setResults(res.data);
         } catch (err) { console.error(err); }
+    };
+
+    const handleExportProgress = () => {
+        if (results.length === 0) {
+            toast.error("No results to export");
+            return;
+        }
+
+        const columns = [
+            { header: 'Exam Name', dataKey: 'exam' },
+            { header: 'Subject', dataKey: 'subject' },
+            { header: 'Marks', dataKey: 'marks' },
+            { header: 'Grade', dataKey: 'grade' },
+            { header: 'Remarks', dataKey: 'remarks' }
+        ];
+
+        // Sort by date newest first (assuming results already from API, otherwise sort here)
+        // results usually have a date or MarkID which indicates order.
+        // I'll sort by result date if available, otherwise keep current order.
+        const sortedResults = [...results].sort((a, b) => new Date(b.UploadDate) - new Date(a.UploadDate));
+
+        const data = sortedResults.map(r => ({
+            exam: r.ExamName,
+            subject: r.SubjectName,
+            marks: r.Marks,
+            grade: r.Grade,
+            remarks: r.Remarks || '-'
+        }));
+
+        generateReport({
+            title: 'Academic Progress Report',
+            subtitle: 'Cumulative Exam Performance',
+            filename: `Progress_Report_${student.StudentName.replace(/\s+/g, '_')}`,
+            columns,
+            data,
+            studentInfo: student
+        });
+        toast.success("Progress report generated!");
     };
 
     const fetchTimetable = async () => {
@@ -345,6 +384,17 @@ const ChildDashboard = ({ student, onBack }) => {
                 {/* RESULTS */}
                 {tab === 'results' && (
                     <div>
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-slate-900">Academic Progress</h3>
+                            {results.length > 0 && (
+                                <button
+                                    onClick={handleExportProgress}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md flex items-center gap-2 font-bold"
+                                >
+                                    <span>📥</span> Download PDF Report
+                                </button>
+                            )}
+                        </div>
                         {results.length === 0 ? (
                             <div className="p-8 text-center text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">No exam results found.</div>
                         ) : (

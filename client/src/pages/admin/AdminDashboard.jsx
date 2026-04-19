@@ -10,6 +10,7 @@ import BottomNav from '../../components/BottomNav';
 import api from '../../api/axios';
 import SkeletonCard, { SkeletonStat } from '../../components/SkeletonCard';
 import EmptyState from '../../components/EmptyState';
+import { generateReport } from '../../utils/reportGenerator';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
@@ -185,6 +186,47 @@ const AdminDashboard = () => {
         } catch (err) {
             toast.error("Error updating payment");
         }
+    };
+
+    const handleExportPayments = () => {
+        const filtered = payTypeFilter === 'registration' ? registrationPayments
+            : payTypeFilter === 'fees' ? monthlyPayments
+            : pendingPayments;
+
+        if (filtered.length === 0) {
+            toast.error("No data to export");
+            return;
+        }
+
+        const columns = [
+            { header: 'Type', dataKey: 'type' },
+            { header: 'Student Name', dataKey: 'student' },
+            { header: 'Parent Name', dataKey: 'parent' },
+            { header: 'Month', dataKey: 'month' },
+            { header: 'Amount', dataKey: 'amount' },
+            { header: 'Date', dataKey: 'date' },
+            { header: 'Ref No', dataKey: 'ref' }
+        ];
+
+        const data = filtered.map(p => ({
+            type: p.IsApproved ? 'Monthly Fee' : 'Registration',
+            student: p.StudentName,
+            parent: p.ParentName,
+            month: p.Month,
+            amount: `Rs. ${p.Amount}`,
+            date: new Date(p.PaymentDate).toLocaleDateString(),
+            ref: p.ReferenceNo
+        }));
+
+        generateReport({
+            title: 'Pending Payments Report',
+            subtitle: `Filter: ${payTypeFilter === 'all' ? 'All Payments' : payTypeFilter === 'registration' ? 'Registrations Only' : 'Monthly Fees Only'}`,
+            filename: `Payments_Report_${new Date().toISOString().split('T')[0]}`,
+            columns,
+            data
+        });
+
+        toast.success("PDF Report generated!");
     };
 
     const handlePostAnnouncement = async (e) => {
@@ -363,6 +405,14 @@ const AdminDashboard = () => {
                                             </button>
                                         ))}
                                     </div>
+                                    <button 
+                                        onClick={handleExportPayments}
+                                        className="px-3 py-2 bg-white hover:bg-slate-50 text-blue-600 rounded-lg text-sm transition border border-slate-200 font-bold flex items-center gap-2 shadow-sm"
+                                        title="Export to PDF"
+                                    >
+                                        <span>📥</span>
+                                        <span className="hidden sm:inline">Export PDF</span>
+                                    </button>
                                     <button onClick={fetchPayments} aria-label="Refresh payments" className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-sm transition border border-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" aria-hidden="false"><span aria-hidden="true">↻</span></button>
                                 </div>
                             </div>
