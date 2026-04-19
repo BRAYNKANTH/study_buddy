@@ -133,12 +133,16 @@ const QRScanner = ({ onScanPromise, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col animate-scale-in">
-
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="qr-scanner-title"
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col motion-safe:animate-scale-in"
+            >
                 {/* Header */}
                 <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 bg-white">
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center" aria-hidden="true">
                             <Camera size={16} className="text-blue-600" />
                         </div>
                         <div>
@@ -202,9 +206,9 @@ const QRScanner = ({ onScanPromise, onClose }) => {
 
                     {/* Success overlay */}
                     {lastScanned && !isProcessing && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-500/90 backdrop-blur-sm z-10">
-                            <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mb-3">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-emerald-500/90 backdrop-blur-sm z-10" role="status" aria-live="assertive">
+                            <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mb-3" aria-hidden="true">
+                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
@@ -241,21 +245,24 @@ const QRScanner = ({ onScanPromise, onClose }) => {
 
                 {/* Manual entry fallback */}
                 <div className="px-4 py-4 bg-slate-50 border-t border-slate-100">
-                    <p className="text-[11px] text-slate-400 mb-2 text-center font-medium uppercase tracking-wide">
+                    <p className="text-[11px] text-slate-400 mb-2 text-center font-medium uppercase tracking-wide" aria-hidden="true">
                         Manual Entry (camera not working?)
                     </p>
                     <form onSubmit={handleManualSubmit} className="flex gap-2">
+                        <label htmlFor="qr-manual-id" className="sr-only">Student ID</label>
                         <input
+                            id="qr-manual-id"
                             name="manualId"
                             type="text"
                             placeholder="Student ID (e.g. S10001)"
-                            className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
+                            aria-label="Student ID for manual entry"
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 text-slate-900"
                             disabled={isProcessing}
                         />
                         <button
                             type="submit"
                             disabled={isProcessing}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl disabled:opacity-50 transition"
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl disabled:opacity-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
                             Mark
                         </button>

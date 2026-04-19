@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import TutorManagement from './TutorManagement';
@@ -33,10 +34,18 @@ const AdminDashboard = () => {
     // Weekly Timetable State
     const [timetableMode, setTimetableMode] = useState('sessions'); // 'sessions' or 'weekly'
     const [timetable, setTimetable] = useState([]);
-    const [ttDay, setTtDay] = useState('Monday');
-    const [ttStart, setTtStart] = useState('');
-    const [ttEnd, setTtEnd] = useState('');
     const [showModal, setShowModal] = useState(false);
+
+    // Isolated modal state — separate from the session scheduler form
+    const [modalGrade, setModalGrade] = useState('6');
+    const [modalSubject, setModalSubject] = useState('');
+    const [modalTeacher, setModalTeacher] = useState('');
+    const [modalDay, setModalDay] = useState('Monday');
+    const [modalStart, setModalStart] = useState('');
+    const [modalEnd, setModalEnd] = useState('');
+
+    // Payments filter
+    const [payTypeFilter, setPayTypeFilter] = useState('all'); // 'all' | 'registration' | 'fees'
 
     // Weekly Timetable Filters
     const [filterGrade, setFilterGrade] = useState('');
@@ -121,18 +130,34 @@ const AdminDashboard = () => {
         e.preventDefault();
         try {
             await api.post('/academic/timetable', {
-                subjectId: scheduleSubject,
-                grade: scheduleGrade,
-                teacherId: scheduleTeacher,
-                dayOfWeek: ttDay,
-                startTime: ttStart,
-                endTime: ttEnd
+                subjectId: modalSubject,
+                grade: modalGrade,
+                teacherId: modalTeacher,
+                dayOfWeek: modalDay,
+                startTime: modalStart,
+                endTime: modalEnd
             });
             toast.success("Timetable updated!");
             fetchTimetable();
+            setShowModal(false);
         } catch (err) {
             toast.error("Error updating timetable");
         }
+    };
+
+    const openAddSlotModal = () => {
+        setModalGrade('6');
+        setModalSubject(subjects[0]?.SubjectID || '');
+        setModalTeacher('');
+        setModalDay('Monday');
+        setModalStart('');
+        setModalEnd('');
+        setShowModal(true);
+    };
+
+    const getSLDate = () => {
+        const SL_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
+        return new Date(Date.now() + SL_OFFSET_MS).toISOString().split('T')[0];
     };
 
     const handleDeleteTimetable = async (id) => {
@@ -201,23 +226,21 @@ const AdminDashboard = () => {
                         let label = tab;
                         let count = 0;
 
-                        if (tab === 'fees') {
-                            label = 'Fee Management';
-                            count = monthlyPayments.length;
-                        } else if (tab === 'registrations') {
-                            label = 'Registrations Pending';
-                            count = registrationPayments.length;
+                        if (tab === 'payments') {
+                            label = 'Payments';
+                            count = pendingPayments.length;
                         }
 
                         return (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`relative px-6 py-3 rounded-xl font-medium transition-all duration-300 capitalize whitespace-nowrap flex items-center gap-2 ${activeTab === tab ? 'glass-button bg-blue-600 text-white shadow-md' : 'bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'}`}
+                                aria-current={activeTab === tab ? 'page' : undefined}
+                                className={`relative px-6 py-3 rounded-xl font-medium transition-all duration-300 capitalize whitespace-nowrap flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === tab ? 'glass-button bg-blue-600 text-white shadow-md' : 'bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'}`}
                             >
                                 {label}
                                 {count > 0 && (
-                                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm pulse-animation">
+                                    <span aria-hidden="true" className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm motion-safe:animate-pulse">
                                         {count}
                                     </span>
                                 )}
@@ -454,37 +477,79 @@ const AdminDashboard = () => {
                                     ))}
                                     {monthlyPayments.length === 0 && (
                                         <tr>
-                                            <td colSpan="7" className="p-12 text-center text-slate-400 italic">No pending monthly fees found.</td>
+                                            <th className="p-4 font-semibold text-sm">Type</th>
+                                            <th className="p-4 font-semibold text-sm">Student</th>
+                                            <th className="p-4 font-semibold text-sm">Parent</th>
+                                            <th className="p-4 font-semibold text-sm">Month</th>
+                                            <th className="p-4 font-semibold text-sm">Amount</th>
+                                            <th className="p-4 font-semibold text-sm">Date</th>
+                                            <th className="p-4 font-semibold text-sm text-right">Actions</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="text-slate-700">
+                                        {filtered.length === 0 && (
+                                            <tr><td colSpan="7" className="py-12">
+                                                <EmptyState icon="✅" title="All Clear!" subtitle="No pending payments at the moment." />
+                                            </td></tr>
+                                        )}
+                                        {filtered.map(p => (
+                                            <tr key={p.PaymentID} className="border-b border-slate-100 hover:bg-slate-50 transition">
+                                                <td className="p-4">
+                                                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${p.IsApproved ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                                                        {p.IsApproved ? 'Monthly' : 'Registration'}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 font-medium">{p.StudentName}</td>
+                                                <td className="p-4 text-slate-500">{p.ParentName}</td>
+                                                <td className="p-4">{p.Month}</td>
+                                                <td className="p-4 font-mono font-medium text-slate-900">Rs. {p.Amount}</td>
+                                                <td className="p-4">
+                                                    <div className="text-slate-400 text-sm">{new Date(p.PaymentDate).toLocaleDateString()}</div>
+                                                    <div className="text-xs text-slate-400 font-mono">{p.ReferenceNo}</div>
+                                                    {p.ReceiptFile && (
+                                                        <a href={`${import.meta.env.VITE_API_URL?.replace('/api','')}/uploads/${p.ReceiptFile}`} target="_blank" rel="noreferrer"
+                                                            className="text-xs text-blue-500 underline">📎 Receipt</a>
+                                                    )}
+                                                </td>
+                                                <td className="p-4 text-right space-x-2">
+                                                    <button onClick={() => handleVerify(p.PaymentID, 'Verified')} className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-bold shadow-sm">{primaryLabel(p)}</button>
+                                                    <button onClick={() => handleVerify(p.PaymentID, 'Rejected')} className="px-4 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition text-sm font-medium shadow-sm">Reject</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {activeTab === 'communication' && (
                     <div className="glass-card p-8 max-w-2xl mx-auto bg-white border border-slate-200 shadow-sm">
                         <h3 className="text-xl font-bold text-slate-900 mb-6">Make an Announcement</h3>
                         <form onSubmit={handlePostAnnouncement} className="space-y-6">
                             <div>
-                                <label className="block text-sm text-slate-600 mb-2">Title</label>
+                                <label htmlFor="ann-title" className="block text-sm text-slate-600 mb-2">Title</label>
                                 <input
+                                    id="ann-title"
                                     value={annTitle}
                                     onChange={(e) => setAnnTitle(e.target.value)}
                                     required
-                                    className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500"
+                                    aria-required="true"
+                                    className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500"
                                     placeholder="Announcement Title"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-600 mb-2">Content</label>
+                                <label htmlFor="ann-content" className="block text-sm text-slate-600 mb-2">Content</label>
                                 <textarea
+                                    id="ann-content"
                                     value={annContent}
                                     onChange={(e) => setAnnContent(e.target.value)}
                                     required
+                                    aria-required="true"
                                     rows="4"
-                                    className="w-full px-4 py-3 glass-input outline-none resize-none transition focus:ring-1 focus:ring-blue-500"
+                                    className="w-full px-4 py-3 glass-input outline-none resize-none transition focus-visible:ring-2 focus-visible:ring-blue-500"
                                     placeholder="Write your announcement here..."
                                 />
                             </div>
@@ -494,15 +559,16 @@ const AdminDashboard = () => {
                                     <select value={annTarget} onChange={(e) => setAnnTarget(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
                                         <option value="All">All Users</option>
                                         <option value="Teachers">Teachers Only</option>
-                                        <option value="Students">Students & Parents</option>
+                                        <option value="Students">Students &amp; Parents</option>
                                     </select>
-                                    <select value={annGrade} onChange={(e) => setAnnGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                    <label htmlFor="ann-grade" className="sr-only">Grade</label>
+                                    <select id="ann-grade" value={annGrade} onChange={(e) => setAnnGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                         <option value="All">All Grades</option>
                                         {[6, 7, 8, 9, 10, 11, 12, 13].map(g => <option key={g} value={g}>Grade {g}</option>)}
                                     </select>
                                 </div>
                             </div>
-                            <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10">Post Announcement</button>
+                            <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Post Announcement</button>
                         </form>
                     </div>
                 )}
@@ -514,15 +580,17 @@ const AdminDashboard = () => {
                             <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-sm inline-flex">
                                 <button
                                     onClick={() => setTimetableMode('sessions')}
-                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition ${timetableMode === 'sessions' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 group'}`}
+                                    aria-pressed={timetableMode === 'sessions'}
+                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${timetableMode === 'sessions' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'}`}
                                 >
-                                    📆 One-off Sessions
+                                    <span aria-hidden="true">📆 </span>One-off Sessions
                                 </button>
                                 <button
                                     onClick={() => setTimetableMode('weekly')}
-                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition ${timetableMode === 'weekly' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'}`}
+                                    aria-pressed={timetableMode === 'weekly'}
+                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${timetableMode === 'weekly' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'}`}
                                 >
-                                    🔄 Weekly Timetable
+                                    <span aria-hidden="true">🔄 </span>Weekly Timetable
                                 </button>
                             </div>
                         </div>
@@ -535,25 +603,27 @@ const AdminDashboard = () => {
                                         <h3 className="text-xl font-bold text-slate-900 mb-6">Schedule Class</h3>
                                         <form onSubmit={handleScheduleClass} className="space-y-4">
                                             <div>
-                                                <label className="block text-sm text-slate-600 mb-2">Grade</label>
-                                                <select value={scheduleGrade} onChange={(e) => setScheduleGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                                <label htmlFor="sch-grade" className="block text-sm text-slate-600 mb-2">Grade</label>
+                                                <select id="sch-grade" value={scheduleGrade} onChange={(e) => setScheduleGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                                     {[6, 7, 8, 9, 10, 11, 12, 13].map(g => <option key={g} value={g}>Grade {g}</option>)}
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-slate-600 mb-2">Subject</label>
-                                                <select value={scheduleSubject} onChange={(e) => { setScheduleSubject(e.target.value); setScheduleTeacher(''); }} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                                <label htmlFor="sch-subject" className="block text-sm text-slate-600 mb-2">Subject</label>
+                                                <select id="sch-subject" value={scheduleSubject} onChange={(e) => { setScheduleSubject(e.target.value); setScheduleTeacher(''); }} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                                     <option value="">Select Subject</option>
                                                     {subjects.map(s => <option key={s.SubjectID} value={s.SubjectID}>{s.SubjectName}</option>)}
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-slate-600 mb-2">Teacher</label>
+                                                <label htmlFor="sch-teacher" className="block text-sm text-slate-600 mb-2">Teacher</label>
                                                 <select
+                                                    id="sch-teacher"
                                                     value={scheduleTeacher}
                                                     onChange={(e) => setScheduleTeacher(e.target.value)}
-                                                    className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500"
+                                                    className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500 disabled:text-slate-400 disabled:bg-slate-50"
                                                     disabled={!scheduleSubject}
+                                                    aria-disabled={!scheduleSubject}
                                                 >
                                                     <option value="">Select Teacher</option>
                                                     {tutors
@@ -567,20 +637,20 @@ const AdminDashboard = () => {
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-slate-600 mb-2">Date</label>
-                                                <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" min={new Date().toISOString().split('T')[0]} />
+                                                <label htmlFor="sch-date" className="block text-sm text-slate-600 mb-2">Date</label>
+                                                <input id="sch-date" type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" min={getSLDate()} />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm text-slate-600 mb-2">Start Time</label>
-                                                    <input type="time" value={scheduleStart} onChange={(e) => setScheduleStart(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" />
+                                                    <label htmlFor="sch-start" className="block text-sm text-slate-600 mb-2">Start Time</label>
+                                                    <input id="sch-start" type="time" value={scheduleStart} onChange={(e) => setScheduleStart(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm text-slate-600 mb-2">End Time</label>
-                                                    <input type="time" value={scheduleEnd} onChange={(e) => setScheduleEnd(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" />
+                                                    <label htmlFor="sch-end" className="block text-sm text-slate-600 mb-2">End Time</label>
+                                                    <input id="sch-end" type="time" value={scheduleEnd} onChange={(e) => setScheduleEnd(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" />
                                                 </div>
                                             </div>
-                                            <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 mt-4">Schedule Class</button>
+                                            <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 mt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Schedule Class</button>
                                         </form>
                                     </>
                                 ) : (
@@ -649,7 +719,7 @@ const AdminDashboard = () => {
                                         </div>
                                     ) : (
                                         <button
-                                            onClick={() => setShowModal(true)}
+                                            onClick={openAddSlotModal}
                                             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition shadow-sm flex items-center gap-2"
                                         >
                                             <span className="text-lg">+</span> Add Weekly Slot
@@ -740,42 +810,47 @@ const AdminDashboard = () => {
 
             {/* Modal for Adding Weekly Slot */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-up">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 motion-safe:animate-fade-in">
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="timetable-modal-title"
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden motion-safe:animate-scale-up"
+                    >
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                            <h3 className="text-xl font-bold text-slate-900">Add Weekly Slot</h3>
-                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 transition">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                            <h3 id="timetable-modal-title" className="text-xl font-bold text-slate-900">Add Weekly Slot</h3>
+                            <button onClick={() => setShowModal(false)} aria-label="Close modal" className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                                <X size={18} aria-hidden="true" />
                             </button>
                         </div>
                         <div className="p-6">
-                            <form onSubmit={(e) => { handleAddToTimetable(e); setShowModal(false); }} className="space-y-4">
+                            <form onSubmit={handleAddToTimetable} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-2">Grade</label>
-                                    <select value={scheduleGrade} onChange={(e) => setScheduleGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                    <label htmlFor="modal-grade" className="block text-sm text-slate-600 mb-2">Grade</label>
+                                    <select id="modal-grade" value={modalGrade} onChange={(e) => setModalGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                         {[6, 7, 8, 9, 10, 11, 12, 13].map(g => <option key={g} value={g}>Grade {g}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-2">Subject</label>
-                                    <select value={scheduleSubject} onChange={(e) => { setScheduleSubject(e.target.value); setScheduleTeacher(''); }} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                    <label htmlFor="modal-subject" className="block text-sm text-slate-600 mb-2">Subject</label>
+                                    <select id="modal-subject" value={modalSubject} onChange={(e) => { setModalSubject(e.target.value); setModalTeacher(''); }} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                         <option value="">Select Subject</option>
                                         {subjects.map(s => <option key={s.SubjectID} value={s.SubjectID}>{s.SubjectName}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-2">Teacher</label>
+                                    <label htmlFor="modal-teacher" className="block text-sm text-slate-600 mb-2">Teacher</label>
                                     <select
-                                        value={scheduleTeacher}
-                                        onChange={(e) => setScheduleTeacher(e.target.value)}
-                                        className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500"
-                                        disabled={!scheduleSubject}
+                                        id="modal-teacher"
+                                        value={modalTeacher}
+                                        onChange={(e) => setModalTeacher(e.target.value)}
+                                        className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500 disabled:text-slate-400 disabled:bg-slate-50"
+                                        disabled={!modalSubject}
+                                        aria-disabled={!modalSubject}
                                     >
                                         <option value="">Select Teacher</option>
                                         {tutors
-                                            .filter(t => !scheduleSubject || (t.SubjectIDs && t.SubjectIDs.includes(String(scheduleSubject))))
+                                            .filter(t => !modalSubject || (t.SubjectIDs && t.SubjectIDs.includes(String(modalSubject))))
                                             .map(t => (
                                                 <option key={t.TeacherID} value={t.TeacherID}>
                                                     {t.TeacherName} {t.Grades && t.Grades.length > 0 ? `(Gr ${t.Grades.join(', ')})` : ''}
@@ -785,8 +860,8 @@ const AdminDashboard = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-2">Day of Week</label>
-                                    <select value={ttDay} onChange={(e) => setTtDay(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                    <label htmlFor="modal-day" className="block text-sm text-slate-600 mb-2">Day of Week</label>
+                                    <select id="modal-day" value={modalDay} onChange={(e) => setModalDay(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                         {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
                                             <option key={d} value={d}>{d}</option>
                                         ))}
@@ -794,15 +869,15 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm text-slate-600 mb-2">Start Time</label>
-                                        <input type="time" value={ttStart} onChange={(e) => setTtStart(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" />
+                                        <label htmlFor="modal-start" className="block text-sm text-slate-600 mb-2">Start Time</label>
+                                        <input id="modal-start" type="time" value={modalStart} onChange={(e) => setModalStart(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm text-slate-600 mb-2">End Time</label>
-                                        <input type="time" value={ttEnd} onChange={(e) => setTtEnd(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" />
+                                        <label htmlFor="modal-end" className="block text-sm text-slate-600 mb-2">End Time</label>
+                                        <input id="modal-end" type="time" value={modalEnd} onChange={(e) => setModalEnd(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" />
                                     </div>
                                 </div>
-                                <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 mt-4">Add to Timetable</button>
+                                <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 mt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Add to Timetable</button>
                             </form>
                         </div>
                     </div>
