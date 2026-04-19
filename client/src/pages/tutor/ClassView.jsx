@@ -182,7 +182,7 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
     };
 
     return (
-        <div className="animate-fade-in-up space-y-6">
+        <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -232,23 +232,23 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
                                     <h3 className="text-lg font-bold text-slate-900">Enrolled Students ({students.length})</h3>
                                 </div>
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm text-slate-600">
-                                        <thead className="text-xs text-slate-500 uppercase border-b border-slate-200 bg-slate-50">
+                                    <table className="pro-table">
+                                        <thead>
                                             <tr>
-                                                <th className="py-3 pl-2 font-semibold">Student ID</th>
-                                                <th className="py-3 font-semibold">Name</th>
-                                                <th className="py-3 text-right pr-2 font-semibold">Actions</th>
+                                                <th>Student ID</th>
+                                                <th>Name</th>
+                                                <th className="text-right">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {students.map(s => (
-                                                <tr key={s.StudentID} className="border-b border-slate-100 hover:bg-slate-50 transition">
-                                                    <td className="py-3 pl-2 font-mono text-slate-500">{s.StudentID}</td>
-                                                    <td className="py-3 font-medium text-slate-900">{s.StudentName}</td>
-                                                    <td className="py-3 text-right pr-2">
+                                                <tr key={s.StudentID}>
+                                                    <td className="font-mono text-neutral-500">{s.StudentID}</td>
+                                                    <td className="font-medium text-neutral-900">{s.StudentName}</td>
+                                                    <td className="text-right">
                                                         <button
                                                             onClick={() => setSelectedStudent(s)}
-                                                            className="text-blue-600 hover:text-blue-700 text-xs px-3 py-1 bg-blue-50 rounded border border-blue-100 hover:border-blue-200 transition font-medium"
+                                                            className="text-neutral-600 hover:text-black text-xs px-3 py-1.5 bg-neutral-100 rounded border border-neutral-200 hover:border-neutral-300 transition font-medium"
                                                         >
                                                             View Details
                                                         </button>
@@ -257,7 +257,7 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
                                             ))}
                                             {students.length === 0 && (
                                                 <tr>
-                                                    <td colSpan="3" className="py-8 text-center text-slate-500">No students enrolled.</td>
+                                                    <td colSpan="3" className="py-8 text-center text-neutral-500">No students enrolled.</td>
                                                 </tr>
                                             )}
                                         </tbody>

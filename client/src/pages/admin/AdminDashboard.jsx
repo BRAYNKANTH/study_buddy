@@ -167,8 +167,8 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen p-8 transition-colors duration-300 bg-slate-50">
-            <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
+        <div className="min-h-screen p-4 md:p-8 transition-colors duration-300 bg-slate-50">
+            <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
                 <PageHeader
                     title="Admin Dashboard"

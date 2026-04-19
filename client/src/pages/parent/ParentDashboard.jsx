@@ -248,7 +248,7 @@ const ParentDashboard = () => {
                 <StudentIDCard student={viewIdCard} onClose={() => setViewIdCard(null)} />
             )}
 
-            <div className="max-w-7xl mx-auto space-y-8 animate-fade-in-up">
+            <div className="max-w-7xl mx-auto space-y-8">
                 {viewChildDashboard ? (
                     <ChildDashboard
                         student={viewChildDashboard}

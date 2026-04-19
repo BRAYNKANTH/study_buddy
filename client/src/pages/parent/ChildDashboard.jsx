@@ -65,7 +65,7 @@ const ChildDashboard = ({ student, onBack }) => {
     }, [tab]);
 
     return (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col animate-fade-in-up">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col">
             {/* Header */}
             <div className="bg-blue-600 p-4 md:p-6 rounded-t-2xl border-b border-blue-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2"></div>

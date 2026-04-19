@@ -55,9 +55,9 @@ const NotificationCenter = () => {
 
             {isOpen && (
                 <>
-                    <div className="fixed inset-0 bg-black/5 backdrop-blur-[2px] z-40" onClick={() => setIsOpen(false)} />
+                    <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
                     <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in-up origin-top-right ring-1 ring-slate-900/5">
-                        <div className="p-4 bg-slate-50/80 border-b border-slate-100 flex justify-between items-center backdrop-blur-sm">
+                        <div className="p-4 bg-slate-50/80 border-b border-slate-100 flex justify-between items-center">
                             <h3 className="font-bold text-slate-800">Notifications</h3>
                             <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 transition p-1 hover:bg-slate-200/50 rounded-lg">
                                 <X size={18} />
