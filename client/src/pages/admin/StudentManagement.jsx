@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
+import { SkeletonTable } from '../../components/SkeletonCard';
+import EmptyState from '../../components/EmptyState';
 
 const StudentManagement = () => {
     const [students, setStudents] = useState([]);
@@ -116,7 +118,7 @@ const StudentManagement = () => {
             {/* Students List */}
             <div className="glass-card p-6 overflow-x-auto bg-white border border-slate-200 shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Students List</h3>
-                {loading ? <p className="text-slate-500">Loading...</p> : (
+                {loading ? <SkeletonTable rows={5} cols={5} /> : (
                     <table className="w-full text-left text-slate-700">
                         <thead>
                             <tr className="border-b border-slate-200 bg-slate-50 text-slate-600">
@@ -129,6 +131,13 @@ const StudentManagement = () => {
                             </tr>
                         </thead>
                         <tbody>
+                            {students.length === 0 && (
+                                <tr>
+                                    <td colSpan="7">
+                                        <EmptyState icon="🎓" title="No Students Found" subtitle="Students registered by parents will appear here." />
+                                    </td>
+                                </tr>
+                            )}
                             {students.map(s => (
                                 <tr key={s.StudentID} className="border-b border-slate-100 hover:bg-slate-50 transition">
                                     <td className="p-3 text-sm text-slate-500 font-mono">{s.StudentID}</td>

@@ -7,6 +7,8 @@ import SubjectManagement from './SubjectManagement';
 import PageHeader from '../../components/PageHeader';
 import BottomNav from '../../components/BottomNav';
 import api from '../../api/axios';
+import SkeletonCard, { SkeletonStat } from '../../components/SkeletonCard';
+import EmptyState from '../../components/EmptyState';
 
 const AdminDashboard = () => {
     const { user, logout } = useAuth();
@@ -229,7 +231,12 @@ const AdminDashboard = () => {
                     <div className="space-y-6">
 
                         {/* ── STATS BAR ── */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                        {!stats ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                                <SkeletonStat count={6} />
+                            </div>
+                        ) : null}
+                        <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 ${!stats ? 'hidden' : ''}`}>
                             {[
                                 { label: 'Students', value: stats?.totalStudents ?? '—', icon: '🎓', color: 'blue', sub: `${stats?.approvedStudents ?? 0} active` },
                                 { label: 'Teachers', value: stats?.totalTeachers ?? '—', icon: '👨‍🏫', color: 'indigo', sub: 'teaching staff' },
@@ -298,7 +305,7 @@ const AdminDashboard = () => {
                         {/* Mobile card view */}
                         <div className="flex flex-col gap-4 md:hidden">
                             {registrationPayments.length === 0 && (
-                                <p className="text-center text-slate-400 italic py-8">No pending registrations found.</p>
+                                <EmptyState icon="📝" title="All Clear!" subtitle="No pending registrations at the moment." />
                             )}
                             {registrationPayments.map(p => (
                                 <div key={p.PaymentID} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
@@ -372,7 +379,7 @@ const AdminDashboard = () => {
                         {/* Mobile card view */}
                         <div className="flex flex-col gap-4 md:hidden">
                             {monthlyPayments.length === 0 && (
-                                <p className="text-center text-slate-400 italic py-8">No pending monthly fees found.</p>
+                                <EmptyState icon="✅" title="No Pending Fees" subtitle="All monthly fee payments are up to date." />
                             )}
                             {monthlyPayments.map(p => (
                                 <div key={p.PaymentID} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
@@ -633,9 +640,11 @@ const AdminDashboard = () => {
                                 <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                                     {timetableMode === 'sessions' ? (
                                         sessions.length === 0 ? (
-                                            <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-400">
-                                                No sessions scheduled{viewGrade ? ` for Grade ${viewGrade}` : ''}.
-                                            </div>
+                                            <EmptyState
+                                                icon="📆"
+                                                title={`No Sessions Scheduled${viewGrade ? ` for Grade ${viewGrade}` : ''}`}
+                                                subtitle="Use the form on the left to schedule a one-off class."
+                                            />
                                         ) : (
                                             sessions.map(sess => (
                                                 <div key={sess.SessionID} className="bg-white p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition flex justify-between items-center group shadow-sm">
@@ -662,9 +671,11 @@ const AdminDashboard = () => {
                                             const matchTeacher = !filterTeacher || tt.TeacherName === filterTeacher;
                                             return matchGrade && matchSubject && matchTeacher;
                                         }).length === 0 ? (
-                                            <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-400">
-                                                No weekly slots found matching filters.
-                                            </div>
+                                            <EmptyState
+                                                icon="🔄"
+                                                title="No Weekly Slots Found"
+                                                subtitle="Try adjusting the filters, or click '+ Add Weekly Slot' to get started."
+                                            />
                                         ) : (
                                             timetable
                                                 .filter(tt => {

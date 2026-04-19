@@ -9,6 +9,7 @@ import BottomNav from '../../components/BottomNav';
 import ClassView from './ClassView';
 import Chat from '../communication/Chat';
 import QRScanner from '../../components/QRScanner';
+import EmptyState from '../../components/EmptyState';
 
 const TutorDashboard = () => {
     const { user, logout } = useAuth();
@@ -226,6 +227,15 @@ const TutorDashboard = () => {
                 ) : view === 'chat' ? <Chat initialContact={chatInitialContact} onMessageRead={fetchUnreadCount} /> : view === 'dashboard' ? (
                     <>
                         {/* Today's Sessions Section */}
+                        {!loading && todaySessions.length === 0 && (
+                            <div className="flex items-center gap-4 px-5 py-4 bg-blue-50 border border-blue-100 rounded-2xl mb-2">
+                                <span className="text-2xl">✅</span>
+                                <div>
+                                    <p className="font-semibold text-blue-800 text-sm">No sessions scheduled for today</p>
+                                    <p className="text-xs text-blue-500 mt-0.5">Check your timetable or enjoy a free day!</p>
+                                </div>
+                            </div>
+                        )}
                         {todaySessions.length > 0 && (
                             <div className="mb-8">
                                 <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -281,9 +291,13 @@ const TutorDashboard = () => {
                                         />
                                     ))}
                                     {modules.length === 0 && (
-                                        <p className="text-slate-400 col-span-full text-center py-10">
-                                            No classes assigned yet.
-                                        </p>
+                                        <div className="col-span-full">
+                                            <EmptyState
+                                                icon="📚"
+                                                title="No Classes Assigned"
+                                                subtitle="Your assigned classes will appear here once the admin sets them up."
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -293,7 +307,13 @@ const TutorDashboard = () => {
                     <div className="glass-card p-6 bg-white border border-slate-200 shadow-sm">
                         <h2 className="text-xl font-bold text-slate-900 mb-4">My Weekly Schedule</h2>
                         <div className="space-y-4">
-                            {timetableData.length === 0 ? <p className="text-slate-400">No scheduled classes.</p> : (
+                            {timetableData.length === 0 ? (
+                                <EmptyState
+                                    icon="📅"
+                                    title="No Weekly Schedule"
+                                    subtitle="Your recurring timetable will appear here once the admin adds it."
+                                />
+                            ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {timetableData.map(t => (
                                         <div key={t.TimetableID} className="p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-400 transition hover:shadow-sm">

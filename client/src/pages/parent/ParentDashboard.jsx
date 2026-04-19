@@ -8,6 +8,7 @@ import StudentIDCard from '../../components/StudentIDCard';
 import AnnouncementBoard from '../../components/AnnouncementBoard';
 import PageHeader from '../../components/PageHeader';
 import SkeletonCard from '../../components/SkeletonCard';
+import EmptyState from '../../components/EmptyState';
 import BottomNav from '../../components/BottomNav';
 import ChildDashboard from './ChildDashboard';
 import Chat from '../communication/Chat';
@@ -297,7 +298,19 @@ const ParentDashboard = () => {
                         {activeTab === 'overview' && (
                             <>
                                 <h2 className="text-xl font-bold text-slate-900 mb-4">My Children</h2>
-                                {loading ? <p className="text-slate-400">Loading...</p> : (
+                                {loading ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        <SkeletonCard count={3} height="h-56" />
+                                    </div>
+                                ) : children.length === 0 ? (
+                                    <EmptyState
+                                        icon="🎓"
+                                        title="No Students Enrolled"
+                                        subtitle="Register your child to start tracking attendance, results, and fee payments."
+                                        action={() => window.location.href = '/parent/add-student'}
+                                        actionLabel="+ Add Student"
+                                    />
+                                ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {children.map(child => (
                                             <div key={child.StudentID} className="glass-card p-6 flex flex-col items-center bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group hover:border-blue-300 relative overflow-hidden">
@@ -508,7 +521,13 @@ const ParentDashboard = () => {
                                         <div className="glass-card p-8 bg-white border border-slate-200 rounded-2xl shadow-sm">
                                             <h3 className="text-xl font-bold text-slate-900 mb-6">Payment History</h3>
                                             <div className="overflow-y-auto max-h-96 pr-2 custom-scrollbar">
-                                                {payments.length === 0 ? <p className="text-slate-400">No payments found.</p> : (
+                                                {payments.length === 0 ? (
+                                    <EmptyState
+                                        icon="💳"
+                                        title="No Payment History"
+                                        subtitle="Your payment records will appear here once you make your first payment."
+                                    />
+                                ) : (
                                                     <table className="w-full text-left text-sm text-slate-600">
                                                         <thead>
                                                             <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
@@ -605,7 +624,13 @@ const ResultsTable = ({ studentId }) => {
         fetchResults();
     }, [studentId]);
 
-    if (results.length === 0) return <p className="text-slate-400">No results found.</p>;
+    if (results.length === 0) return (
+        <EmptyState
+            icon="📋"
+            title="No Results Yet"
+            subtitle="Exam results will appear here once they are published by your teacher."
+        />
+    );
 
     return (
         <table className="w-full text-left text-sm text-slate-600">
