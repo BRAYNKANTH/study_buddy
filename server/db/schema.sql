@@ -135,6 +135,7 @@ CREATE TABLE IF NOT EXISTS Marks (
     Marks INT NOT NULL,
     Remarks VARCHAR(255),
     UploadDate DATE NOT NULL,
+    UNIQUE KEY uq_exam_student (ExamID, StudentID),
     FOREIGN KEY (ExamID) REFERENCES Exam(ExamID),
     FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
 );

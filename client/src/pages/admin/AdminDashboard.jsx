@@ -320,7 +320,11 @@ const AdminDashboard = () => {
                                         <span>{p.Month}</span>
                                         <span>{new Date(p.PaymentDate).toLocaleDateString()}</span>
                                     </div>
-                                    <p className="text-xs text-slate-400 font-mono truncate">{p.ReferenceNo}</p>
+                                    <p className="text-xs text-slate-400 font-mono truncate">Ref: {p.ReferenceNo}</p>
+                                    {p.ReceiptFile && (
+                                        <a href={`${import.meta.env.VITE_API_URL?.replace('/api','')}/uploads/${p.ReceiptFile}`} target="_blank" rel="noreferrer"
+                                            className="text-xs text-blue-500 underline truncate">📎 View Receipt</a>
+                                    )}
                                     <div className="flex gap-2 pt-1">
                                         <button onClick={() => handleVerify(p.PaymentID, 'Verified')} className="flex-1 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition text-sm font-medium">Approve</button>
                                         <button onClick={() => handleVerify(p.PaymentID, 'Rejected')} className="flex-1 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition text-sm font-medium">Reject</button>
@@ -346,7 +350,13 @@ const AdminDashboard = () => {
                                 <tbody className="text-slate-700">
                                     {registrationPayments.map(p => (
                                         <tr key={p.PaymentID} className="border-b border-slate-100 hover:bg-slate-50 transition">
-                                            <td className="p-4 text-slate-600 font-mono text-sm">{p.ReferenceNo}</td>
+                                            <td className="p-4 text-slate-600 font-mono text-sm">
+                                                <div>{p.ReferenceNo}</div>
+                                                {p.ReceiptFile && (
+                                                    <a href={`${import.meta.env.VITE_API_URL?.replace('/api','')}/uploads/${p.ReceiptFile}`} target="_blank" rel="noreferrer"
+                                                        className="text-xs text-blue-500 underline">📎 Receipt</a>
+                                                )}
+                                            </td>
                                             <td className="p-4 font-medium">{p.StudentName} <span className="ml-2 text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">New</span></td>
                                             <td className="p-4 text-slate-500">{p.ParentName}</td>
                                             <td className="p-4">{p.Month}</td>
@@ -394,7 +404,11 @@ const AdminDashboard = () => {
                                         <span>{p.Month}</span>
                                         <span>{new Date(p.PaymentDate).toLocaleDateString()}</span>
                                     </div>
-                                    <p className="text-xs text-slate-400 font-mono truncate">{p.ReferenceNo}</p>
+                                    <p className="text-xs text-slate-400 font-mono truncate">Ref: {p.ReferenceNo}</p>
+                                    {p.ReceiptFile && (
+                                        <a href={`${import.meta.env.VITE_API_URL?.replace('/api','')}/uploads/${p.ReceiptFile}`} target="_blank" rel="noreferrer"
+                                            className="text-xs text-blue-500 underline truncate">📎 View Receipt</a>
+                                    )}
                                     <div className="flex gap-2 pt-1">
                                         <button onClick={() => handleVerify(p.PaymentID, 'Verified')} className="flex-1 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition text-sm font-medium">Verify</button>
                                         <button onClick={() => handleVerify(p.PaymentID, 'Rejected')} className="flex-1 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition text-sm font-medium">Reject</button>
@@ -420,7 +434,13 @@ const AdminDashboard = () => {
                                 <tbody className="text-slate-700">
                                     {monthlyPayments.map(p => (
                                         <tr key={p.PaymentID} className="border-b border-slate-100 hover:bg-slate-50 transition">
-                                            <td className="p-4 text-slate-600 font-mono text-sm">{p.ReferenceNo}</td>
+                                            <td className="p-4 text-slate-600 font-mono text-sm">
+                                                <div>{p.ReferenceNo}</div>
+                                                {p.ReceiptFile && (
+                                                    <a href={`${import.meta.env.VITE_API_URL?.replace('/api','')}/uploads/${p.ReceiptFile}`} target="_blank" rel="noreferrer"
+                                                        className="text-xs text-blue-500 underline">📎 Receipt</a>
+                                                )}
+                                            </td>
                                             <td className="p-4 font-medium">{p.StudentName}</td>
                                             <td className="p-4 text-slate-500">{p.ParentName}</td>
                                             <td className="p-4">{p.Month}</td>

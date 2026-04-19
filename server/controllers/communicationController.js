@@ -24,29 +24,31 @@ const getChatHistory = async (req, res) => {
 
     try {
         const [chats] = await db.query(`
-            SELECT * FROM Chat 
+            SELECT * FROM Chat
             WHERE (SenderID = ? AND ReceiverID = ?) OR (SenderID = ? AND ReceiverID = ?)
             ORDER BY Timestamp ASC
         `, [userId, contactId, contactId, userId]);
+
+        // Mark as read: messages sent to this user from this contact
+        await db.query(
+            "UPDATE Chat SET IsRead = TRUE WHERE SenderID = ? AND ReceiverID = ? AND IsRead = FALSE",
+            [contactId, userId]
+        );
+
         res.json(chats);
     } catch (err) {
         res.status(500).json({ message: "Error fetching chat" });
     }
 };
 
-// NEW: Delete Chat
+// Delete Chat
 const deleteChat = async (req, res) => {
     const userId = req.user.id;
     const { contactId } = req.params;
 
     try {
-        // Deleting *all* messages between these two users
-        // Note: Ideally, you might want to only "hide" them for the deleter, or delete only if both agree.
-        // For this request, we'll hard delete the conversation for both to keep it simple as implied "delete chat".
-        // Or if we want "delete for me", we need a new column. 
-        // Assuming "Delete Chat" means clearing history.
         await db.query(`
-            DELETE FROM Chat 
+            DELETE FROM Chat
             WHERE (SenderID = ? AND ReceiverID = ?) OR (SenderID = ? AND ReceiverID = ?)
         `, [userId, contactId, contactId, userId]);
 
@@ -60,10 +62,10 @@ const deleteChat = async (req, res) => {
 // Get Chat Contacts
 const getChatContacts = async (req, res) => {
     const userId = req.user.id;
-    const userRole = req.user.role; // Assuming role is available in request
+    const userRole = req.user.role;
 
     try {
-        console.log("Fetching contacts for User:", userId, "Role:", userRole);
+        // Base query: people this user has already chatted with
         let query = `
             SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, u.Role, s.SubjectName
             FROM Chat c
@@ -75,8 +77,8 @@ const getChatContacts = async (req, res) => {
         `;
         const params = [userId, userId, userId];
 
-        // If Tutor, also fetch ALL parents of enrolled students
-        if (userRole === 'tutor' || userRole === 'teacher') {
+        // Teachers also see all parents of their enrolled students (even if no prior chat)
+        if (userRole === 'teacher') {
             query += `
                 UNION
                 SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'parent' as Role, sub.SubjectName
@@ -92,8 +94,6 @@ const getChatContacts = async (req, res) => {
         }
 
         const [contacts] = await db.query(query, params);
-
-        console.log("Contacts found:", contacts.length);
         res.json(contacts);
     } catch (err) {
         console.error(err);
@@ -106,7 +106,7 @@ const getUnreadCount = async (req, res) => {
     const userId = req.user.id;
     try {
         const [rows] = await db.query(`
-            SELECT COUNT(*) as count FROM Chat 
+            SELECT COUNT(*) as count FROM Chat
             WHERE ReceiverID = ? AND IsRead = FALSE
         `, [userId]);
         res.json({ count: rows[0].count });
@@ -118,7 +118,6 @@ const getUnreadCount = async (req, res) => {
 // Create Announcement (Admin)
 const createAnnouncement = async (req, res) => {
     const { title, content, targetGroup } = req.body;
-    // const adminId = req.user.id; // Not needed in new schema if no CreatorID
 
     try {
         await db.query(
@@ -132,36 +131,13 @@ const createAnnouncement = async (req, res) => {
     }
 };
 
-// Get Announcements (User)
+// Get Announcements (All users)
 const getAnnouncements = async (req, res) => {
     try {
         const [announcements] = await db.query("SELECT * FROM Announcement ORDER BY Date DESC");
         res.json(announcements);
     } catch (err) {
         res.status(500).json({ message: "Error fetching announcements" });
-    }
-};
-
-// Get Notifications
-const getNotifications = async (req, res) => {
-    const userId = req.user.id;
-    try {
-        const [notes] = await db.query("SELECT * FROM Communication WHERE Type = 'Notification' AND ReceiverID = ? ORDER BY Timestamp DESC", [userId]);
-        res.json(notes);
-    } catch (err) {
-        res.status(500).json({ message: "Error fetching notifications" });
-    }
-};
-
-// Create Notification (Internal Helper)
-const createNotification = async (receiverId, title, message) => {
-    try {
-        await db.query(
-            "INSERT INTO Communication (Type, ReceiverID, Title, Content) VALUES ('Notification', ?, ?, ?)",
-            [receiverId, title, message]
-        );
-    } catch (err) {
-        console.error("Notification Error:", err);
     }
 };
 
@@ -172,7 +148,5 @@ module.exports = {
     getUnreadCount,
     createAnnouncement,
     getAnnouncements,
-    getNotifications,
-    createNotification,
     deleteChat
 };

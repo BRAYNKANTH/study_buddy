@@ -113,30 +113,42 @@ const getAllParents = async (req, res) => {
 };
 
 const addParent = async (req, res) => {
-    const { ParentID, FullName, Email, Phone, Password, SecretPasscode } = req.body;
+    const { FullName, Email, Phone, Password, SecretPasscode } = req.body;
 
     const conn = await db.getConnection();
     try {
         await conn.beginTransaction();
 
+        // Auto-generate ParentID (consistent with tutor ID generation)
+        const ParentID = 'P' + Date.now();
+
+        // Auto-generate a SecretPasscode if admin doesn't supply one
+        const passcode = SecretPasscode && SecretPasscode.trim()
+            ? SecretPasscode.trim()
+            : Math.random().toString(36).slice(2, 8).toUpperCase(); // e.g. "AB3X9K"
+
         const hashedPassword = await bcrypt.hash(Password, 10);
 
         // 1. Create User
         await conn.query(
-            "INSERT INTO User (UserID, FullName, Email, Password, Role, IsVerified) VALUES (?, ?, ?, ?, 'parent', FALSE)",
+            "INSERT INTO User (UserID, FullName, Email, Password, Role, IsVerified) VALUES (?, ?, ?, ?, 'parent', TRUE)",
             [ParentID, FullName, Email, hashedPassword]
         );
 
         // 2. Create Profile
         await conn.query(
             "INSERT INTO ParentProfile (UserID, Phone, SecretPasscode) VALUES (?, ?, ?)",
-            [ParentID, Phone, SecretPasscode]
+            [ParentID, Phone, passcode]
         );
 
         await conn.commit();
-        res.status(201).json({ message: "Parent added successfully" });
+        // Return the passcode so admin can share it with the parent
+        res.status(201).json({ message: "Parent added successfully", parentId: ParentID, secretPasscode: passcode });
     } catch (err) {
         await conn.rollback();
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ message: "Email or phone already exists" });
+        }
         res.status(500).json({ message: "Error adding parent", error: err.message });
     } finally {
         conn.release();
@@ -283,13 +295,8 @@ const deleteUser = async (req, res) => {
             await conn.query("DELETE FROM TeacherSubject WHERE TeacherID = ?", [id]);
             await conn.query("DELETE FROM TeacherGrade WHERE TeacherID = ?", [id]);
             await conn.query("DELETE FROM TeacherProfile WHERE UserID = ?", [id]);
-            // Chat/Announcements? Maybe set to null or delete?
-            // For now, let's assume Chat FK might restrict. 
-            // If Chat has FK to User, we must delete chats too or set NULL.
-            // Schema has FK on SenderID/ReceiverID. 
+            // Delete chat history (Chat has FK to User — must clear before deleting user)
             await conn.query("DELETE FROM Chat WHERE SenderID = ? OR ReceiverID = ?", [id, id]);
-            // Communication (Announcements)?
-            await conn.query("DELETE FROM Communication WHERE SenderID = ? OR ReceiverID = ?", [id, id]); // If exists
         } else if (role === 'parent') {
             // Delete Parent Data
             // First find students

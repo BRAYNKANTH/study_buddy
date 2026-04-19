@@ -34,21 +34,19 @@ const generatePayHereHash = async (req, res) => {
 };
 
 // Upload Payment (Parent)
+// Fixed: was concatenating filename into ReferenceNo field — now stored separately in ReceiptFile column
 const uploadPayment = async (req, res) => {
     const { studentId, month, referenceNo, amount } = req.body;
-    let finalRef = referenceNo || '';
-
-    if (req.file) {
-        finalRef += ` [FILE: ${req.file.filename}]`;
-    }
+    const receiptFile = req.file ? req.file.filename : null;
 
     try {
         const monthLabel = month || new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-
         const paymentId = 'PM' + Date.now().toString().slice(-6);
+        const refNo = referenceNo || 'PENDING_UPLOAD';
+
         await db.query(
-            "INSERT INTO Payment (PaymentID, StudentID, Month, ReferenceNo, Amount, PaymentDate, Status) VALUES (?, ?, ?, ?, ?, NOW(), 'Pending')",
-            [paymentId, studentId, monthLabel, finalRef, amount]
+            "INSERT INTO Payment (PaymentID, StudentID, Month, ReferenceNo, Amount, ReceiptFile, PaymentDate, Status) VALUES (?, ?, ?, ?, ?, ?, NOW(), 'Pending')",
+            [paymentId, studentId, monthLabel, refNo, amount, receiptFile]
         );
         res.status(201).json({ message: "Payment submitted for verification", paymentId });
     } catch (err) {
