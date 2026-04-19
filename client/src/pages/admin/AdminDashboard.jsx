@@ -5,6 +5,7 @@ import TutorManagement from './TutorManagement';
 import StudentManagement from './StudentManagement';
 import SubjectManagement from './SubjectManagement';
 import PageHeader from '../../components/PageHeader';
+import BottomNav from '../../components/BottomNav';
 import api from '../../api/axios';
 
 const AdminDashboard = () => {
@@ -174,8 +175,16 @@ const AdminDashboard = () => {
         } catch (err) { toast.error("Error posting announcement"); }
     };
 
+    const adminNavItems = [
+        { id: 'overview', label: 'Home', icon: '🏠', badge: 0 },
+        { id: 'fees', label: 'Fees', icon: '💰', badge: monthlyPayments.length },
+        { id: 'registrations', label: 'Register', icon: '📝', badge: registrationPayments.length },
+        { id: 'communication', label: 'Announce', icon: '📢', badge: 0 },
+        { id: 'timetable', label: 'Schedule', icon: '📅', badge: 0 },
+    ];
+
     return (
-        <div className="min-h-screen p-4 md:p-8 transition-colors duration-300 bg-slate-50">
+        <div className="min-h-screen p-4 md:p-8 pb-24 md:pb-8 transition-colors duration-300 bg-slate-50">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
                 <PageHeader
@@ -184,8 +193,8 @@ const AdminDashboard = () => {
                     onLogout={logout}
                 />
 
-                {/* Tabs */}
-                <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
+                {/* Tabs — hidden on mobile, shown on desktop */}
+                <div className="hidden md:flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
                     {['overview', 'tutors', 'students', 'subjects', 'registrations', 'fees', 'communication', 'timetable'].map(tab => {
                         let label = tab;
                         let count = 0;
@@ -768,6 +777,13 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             )}
+
+            {/* Mobile Bottom Navigation */}
+            <BottomNav
+                items={adminNavItems}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+            />
         </div>
     );
 };

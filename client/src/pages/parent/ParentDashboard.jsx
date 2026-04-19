@@ -8,6 +8,7 @@ import StudentIDCard from '../../components/StudentIDCard';
 import AnnouncementBoard from '../../components/AnnouncementBoard';
 import PageHeader from '../../components/PageHeader';
 import SkeletonCard from '../../components/SkeletonCard';
+import BottomNav from '../../components/BottomNav';
 import ChildDashboard from './ChildDashboard';
 import Chat from '../communication/Chat';
 
@@ -243,7 +244,7 @@ const ParentDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen p-4 md:p-8 transition-colors duration-300 bg-slate-50">
+        <div className="min-h-screen p-4 md:p-8 pb-24 md:pb-8 transition-colors duration-300 bg-slate-50">
             {viewIdCard && (
                 <StudentIDCard student={viewIdCard} onClose={() => setViewIdCard(null)} />
             )}
@@ -265,9 +266,9 @@ const ParentDashboard = () => {
                         />
 
                         {/* Navigation */}
-                        {/* Navigation Menu */}
+                        {/* Navigation Menu — tab bar hidden on mobile, replaced by BottomNav */}
                         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                            <div className="flex space-x-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 w-full md:w-auto overflow-x-auto">
+                            <div className="hidden md:flex space-x-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 w-full md:w-auto overflow-x-auto">
                                 <button onClick={() => setActiveTab('overview')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'overview' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
                                     Overview
                                 </button>
@@ -572,6 +573,20 @@ const ParentDashboard = () => {
                     </>
                 )}
             </div>
+
+            {/* Mobile Bottom Navigation — only show when not in child dashboard */}
+            {!viewChildDashboard && (
+                <BottomNav
+                    items={[
+                        { id: 'overview', label: 'Home', icon: '🏠', badge: 0 },
+                        { id: 'payments', label: 'Payments', icon: '💰', badge: 0 },
+                        { id: 'academic', label: 'Progress', icon: '📊', badge: 0 },
+                        { id: 'chat', label: 'Messages', icon: '💬', badge: unreadCount },
+                    ]}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                />
+            )}
         </div>
     );
 };

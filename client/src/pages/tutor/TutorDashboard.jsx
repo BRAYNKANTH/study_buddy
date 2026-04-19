@@ -5,6 +5,7 @@ import api from '../../api/axios';
 import PageHeader from '../../components/PageHeader';
 import ModuleCard from '../../components/ModuleCard';
 import SkeletonCard from '../../components/SkeletonCard';
+import BottomNav from '../../components/BottomNav';
 import ClassView from './ClassView';
 import Chat from '../communication/Chat';
 import QRScanner from '../../components/QRScanner';
@@ -146,7 +147,7 @@ const TutorDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen p-4 md:p-8 transition-colors duration-300 bg-slate-50">
+        <div className="min-h-screen p-4 md:p-8 pb-24 md:pb-8 transition-colors duration-300 bg-slate-50">
             <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
                 {/* Global Header */}
                 <PageHeader
@@ -158,7 +159,7 @@ const TutorDashboard = () => {
 
                 {/* Sub Navigation */}
                 {view !== 'class' && view !== 'settings' && (
-                    <div className="flex gap-1 border-b border-slate-200 pb-0 overflow-x-auto scrollbar-hide">
+                    <div className="hidden md:flex gap-1 border-b border-slate-200 pb-0 overflow-x-auto scrollbar-hide">
                         {[
                             { id: 'dashboard', label: 'My Classes', icon: '📚' },
                             { id: 'timetable', label: 'Timetable', icon: '📅' },
@@ -321,6 +322,20 @@ const TutorDashboard = () => {
             </div>
 
             {showScanner && <QRScanner onScanPromise={handleScan} onClose={() => setShowScanner(false)} />}
+
+            {/* Mobile Bottom Navigation — hide when inside a class view */}
+            {view !== 'class' && (
+                <BottomNav
+                    items={[
+                        { id: 'dashboard', label: 'Classes', icon: '📚', badge: 0 },
+                        { id: 'timetable', label: 'Timetable', icon: '📅', badge: 0 },
+                        { id: 'chat', label: 'Messages', icon: '💬', badge: unreadCount },
+                        { id: 'settings', label: 'Settings', icon: '⚙️', badge: 0 },
+                    ]}
+                    activeTab={view}
+                    onTabChange={(id) => { if (id === 'chat') setChatInitialContact(null); setView(id); }}
+                />
+            )}
         </div>
     );
 }
