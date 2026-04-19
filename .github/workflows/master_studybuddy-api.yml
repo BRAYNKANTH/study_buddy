@@ -46,4 +46,4 @@ jobs:
           app-name: 'studybuddy-api'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_1CD75D841686463594166628B1ABD5F4A }}
