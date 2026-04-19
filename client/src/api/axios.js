@@ -19,20 +19,9 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Handle expired / invalid tokens globally — redirect to login
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            // Avoid redirect loop if already on /login
-            if (!window.location.pathname.startsWith('/login')) {
-                window.location.href = '/login';
-            }
-        }
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
 export default api;
