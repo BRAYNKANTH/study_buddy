@@ -210,7 +210,7 @@ const AdminDashboard = () => {
                 {/* Content */}
                 {activeTab === 'overview' && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="glass-card p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('tutors')}>
+                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('tutors')}>
                             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
                             <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100">
                                 👨‍🏫
@@ -218,7 +218,7 @@ const AdminDashboard = () => {
                             <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Manage Users</h3>
                             <p className="text-slate-500 relative z-10">Add or edit Tutors and Students profiles.</p>
                         </div>
-                        <div className="glass-card p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('fees')}>
+                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('fees')}>
                             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/10 transition-colors"></div>
                             <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-emerald-100 relative">
                                 💰
@@ -231,7 +231,7 @@ const AdminDashboard = () => {
                             <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Fee Management</h3>
                             <p className="text-slate-500 relative z-10">Verify monthly payments.</p>
                         </div>
-                        <div className="glass-card p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('registrations')}>
+                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('registrations')}>
                             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
                             <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100 relative">
                                 📝
@@ -244,7 +244,7 @@ const AdminDashboard = () => {
                             <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Registrations</h3>
                             <p className="text-slate-500 relative z-10">Verify new student registrations.</p>
                         </div>
-                        <div className="glass-card p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('communication')}>
+                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('communication')}>
                             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
                             <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100">
                                 📢
@@ -252,7 +252,7 @@ const AdminDashboard = () => {
                             <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Announcements</h3>
                             <p className="text-slate-500 relative z-10">Post updates and news to all users.</p>
                         </div>
-                        <div className="glass-card p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('subjects')}>
+                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('subjects')}>
                             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
                             <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100">
                                 📚
@@ -268,13 +268,41 @@ const AdminDashboard = () => {
                 {activeTab === 'subjects' && <SubjectManagement />}
 
                 {activeTab === 'registrations' && (
-                    <div className="glass-card p-8 bg-white border border-slate-200 shadow-sm">
+                    <div className="glass-card p-4 md:p-8 bg-white border border-slate-200 shadow-sm">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-slate-900">Pending Registrations</h2>
                             <button onClick={fetchPayments} className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-sm transition border border-slate-200">Refresh</button>
                         </div>
 
-                        <div className="overflow-x-auto">
+                        {/* Mobile card view */}
+                        <div className="flex flex-col gap-4 md:hidden">
+                            {registrationPayments.length === 0 && (
+                                <p className="text-center text-slate-400 italic py-8">No pending registrations found.</p>
+                            )}
+                            {registrationPayments.map(p => (
+                                <div key={p.PaymentID} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-semibold text-slate-900">{p.StudentName} <span className="ml-1 text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">New</span></p>
+                                            <p className="text-sm text-slate-500">{p.ParentName}</p>
+                                        </div>
+                                        <p className="font-mono font-bold text-slate-900">Rs. {p.Amount}</p>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-slate-400">
+                                        <span>{p.Month}</span>
+                                        <span>{new Date(p.PaymentDate).toLocaleDateString()}</span>
+                                    </div>
+                                    <p className="text-xs text-slate-400 font-mono truncate">{p.ReferenceNo}</p>
+                                    <div className="flex gap-2 pt-1">
+                                        <button onClick={() => handleVerify(p.PaymentID, 'Verified')} className="flex-1 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition text-sm font-medium">Approve</button>
+                                        <button onClick={() => handleVerify(p.PaymentID, 'Rejected')} className="flex-1 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition text-sm font-medium">Reject</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop table view */}
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
                                     <tr>
@@ -314,13 +342,41 @@ const AdminDashboard = () => {
                 )}
 
                 {activeTab === 'fees' && (
-                    <div className="glass-card p-8 bg-white border border-slate-200 shadow-sm">
+                    <div className="glass-card p-4 md:p-8 bg-white border border-slate-200 shadow-sm">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-slate-900">Pending Monthly Fees</h2>
                             <button onClick={fetchPayments} className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-sm transition border border-slate-200">Refresh</button>
                         </div>
 
-                        <div className="overflow-x-auto">
+                        {/* Mobile card view */}
+                        <div className="flex flex-col gap-4 md:hidden">
+                            {monthlyPayments.length === 0 && (
+                                <p className="text-center text-slate-400 italic py-8">No pending monthly fees found.</p>
+                            )}
+                            {monthlyPayments.map(p => (
+                                <div key={p.PaymentID} className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-semibold text-slate-900">{p.StudentName}</p>
+                                            <p className="text-sm text-slate-500">{p.ParentName}</p>
+                                        </div>
+                                        <p className="font-mono font-bold text-slate-900">Rs. {p.Amount}</p>
+                                    </div>
+                                    <div className="flex justify-between text-xs text-slate-400">
+                                        <span>{p.Month}</span>
+                                        <span>{new Date(p.PaymentDate).toLocaleDateString()}</span>
+                                    </div>
+                                    <p className="text-xs text-slate-400 font-mono truncate">{p.ReferenceNo}</p>
+                                    <div className="flex gap-2 pt-1">
+                                        <button onClick={() => handleVerify(p.PaymentID, 'Verified')} className="flex-1 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition text-sm font-medium">Verify</button>
+                                        <button onClick={() => handleVerify(p.PaymentID, 'Rejected')} className="flex-1 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition text-sm font-medium">Reject</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Desktop table view */}
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
                                     <tr>
@@ -386,7 +442,7 @@ const AdminDashboard = () => {
                             </div>
                             <div>
                                 <label className="block text-sm text-slate-600 mb-2">Target Audience</label>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <select value={annTarget} onChange={(e) => setAnnTarget(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
                                         <option value="All">All Users</option>
                                         <option value="Teachers">Teachers Only</option>
