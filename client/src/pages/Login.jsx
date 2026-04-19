@@ -7,8 +7,17 @@ import { Eye, EyeOff } from 'lucide-react';
 import illustration from '../assets/login-illustration.png';
 
 const Login = () => {
-    const { login } = useAuth();
+    const { login, user } = useAuth();
     const navigate = useNavigate();
+
+    // Already logged in — send to their dashboard
+    if (user) {
+        const dest = user.role === 'admin' ? '/admin/dashboard'
+                   : user.role === 'teacher' ? '/tutor/dashboard'
+                   : '/parent/dashboard';
+        navigate(dest, { replace: true });
+        return null;
+    }
 
     // Default form data without role
     const [formData, setFormData] = useState({
