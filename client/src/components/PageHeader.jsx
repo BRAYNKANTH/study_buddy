@@ -31,10 +31,11 @@ const PageHeader = ({ title, subtitle, onLogout, onSettings, extra }) => (
             {onSettings && (
                 <button
                     onClick={onSettings}
-                    className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl transition text-sm font-medium"
+                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl transition text-sm font-medium"
+                    aria-label="Settings"
                 >
                     <Settings size={15} />
-                    <span>Settings</span>
+                    <span className="hidden sm:inline">Settings</span>
                 </button>
             )}
             <button
