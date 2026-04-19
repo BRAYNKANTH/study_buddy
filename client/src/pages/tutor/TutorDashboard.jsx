@@ -207,7 +207,7 @@ const TutorDashboard = () => {
                 )}
 
                 {view === 'settings' ? (
-                    <div className="glass-card p-8 max-w-md mx-auto bg-white border border-slate-200 shadow-sm">
+                    <div className="glass-card p-5 md:p-8 max-w-md mx-auto bg-white border border-slate-200 shadow-sm">
                         <h2 className="text-2xl font-bold text-slate-900 mb-6">Change Password</h2>
                         {passMessage && <p className={`mb-4 p-3 rounded ${passMessage.includes('success') ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>{passMessage}</p>}
                         <form onSubmit={handleChangePassword} className="space-y-4">

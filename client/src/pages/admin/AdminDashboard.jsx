@@ -454,7 +454,7 @@ const AdminDashboard = () => {
                 })()}
 
                 {activeTab === 'communication' && (
-                    <div className="glass-card p-8 max-w-2xl mx-auto bg-white border border-slate-200 shadow-sm">
+                    <div className="glass-card p-5 md:p-8 max-w-2xl mx-auto bg-white border border-slate-200 shadow-sm">
                         <h3 className="text-xl font-bold text-slate-900 mb-6">Make an Announcement</h3>
                         <form onSubmit={handlePostAnnouncement} className="space-y-6">
                             <div>
@@ -656,7 +656,7 @@ const AdminDashboard = () => {
                                     )}
                                 </div>
 
-                                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                                <div className="space-y-4 max-h-[350px] sm:max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                                     {timetableMode === 'sessions' ? (
                                         sessions.length === 0 ? (
                                             <EmptyState
@@ -745,7 +745,7 @@ const AdminDashboard = () => {
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="timetable-modal-title"
-                        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden motion-safe:animate-scale-up"
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto motion-safe:animate-scale-up"
                     >
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <h3 id="timetable-modal-title" className="text-xl font-bold text-slate-900">Add Weekly Slot</h3>

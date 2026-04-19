@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { X, User, Mail, Phone, Save } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -217,6 +217,24 @@ const ParentDashboard = () => {
         }
     };
 
+    // Settings state
+    const [settingsEmail, setSettingsEmail] = useState(user?.email || '');
+    const [settingsPhone, setSettingsPhone] = useState('');
+    const [settingsSaving, setSettingsSaving] = useState(false);
+
+    const handleSaveSettings = async (e) => {
+        e.preventDefault();
+        setSettingsSaving(true);
+        try {
+            await api.put('/users/profile', { email: settingsEmail, phone: settingsPhone || undefined });
+            toast.success('Profile updated successfully.');
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to update profile.');
+        } finally {
+            setSettingsSaving(false);
+        }
+    };
+
     const [chatTarget, setChatTarget] = useState(null);
     const [chatFilterStudent, setChatFilterStudent] = useState(null);
 
@@ -293,6 +311,9 @@ const ParentDashboard = () => {
                                             {unreadCount}
                                         </span>
                                     )}
+                                </button>
+                                <button onClick={() => setActiveTab('settings')} aria-current={activeTab === 'settings' ? 'page' : undefined} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === 'settings' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                                    Settings
                                 </button>
                             </nav>
 
@@ -449,11 +470,11 @@ const ParentDashboard = () => {
                                                 <span className="text-lg leading-none">+</span> Make Payment
                                             </button>
                                         </div>
-                                        <div className="overflow-y-auto max-h-[500px] pr-1 custom-scrollbar">
+                                        <div className="overflow-x-auto overflow-y-auto max-h-[400px] sm:max-h-[500px] pr-1 custom-scrollbar">
                                             {payments.length === 0 ? (
                                                 <EmptyState icon="💳" title="No Payment History" subtitle="Your payment records will appear here once you make your first payment." />
                                             ) : (
-                                                <table className="w-full text-left text-sm text-slate-600">
+                                                <table className="w-full min-w-[400px] text-left text-sm text-slate-600">
                                                     <thead>
                                                         <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
                                                             <th className="pb-3 pl-4 pt-3">Date</th>
@@ -547,7 +568,7 @@ const ParentDashboard = () => {
 
                         {/* Academic Tab */}
                         {activeTab === 'academic' && (
-                            <div className="glass-card p-8 bg-white border border-slate-200 rounded-2xl shadow-sm h-full min-h-[500px]">
+                            <div className="glass-card p-4 md:p-8 bg-white border border-slate-200 rounded-2xl shadow-sm h-full min-h-[500px]">
                                 <div className="flex justify-between items-center mb-6">
                                     <h2 className="text-xl font-bold text-slate-900">Exam Results</h2>
                                     <label htmlFor="results-child" className="sr-only">Select student</label>
@@ -565,9 +586,60 @@ const ParentDashboard = () => {
                             </div>
                         )}
 
+                        {/* Settings Tab */}
+                        {activeTab === 'settings' && (
+                            <div className="max-w-lg mx-auto">
+                                <div className="glass-card p-6 md:p-8 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                                            <User size={20} className="text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-lg font-bold text-slate-900">Account Settings</h2>
+                                            <p className="text-sm text-slate-500">Update your email and phone number</p>
+                                        </div>
+                                    </div>
+                                    <form onSubmit={handleSaveSettings} className="space-y-5">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                                                <span className="flex items-center gap-1.5"><Mail size={14} /> Email Address</span>
+                                            </label>
+                                            <input
+                                                type="email"
+                                                value={settingsEmail}
+                                                onChange={e => setSettingsEmail(e.target.value)}
+                                                placeholder="your@email.com"
+                                                className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                                                <span className="flex items-center gap-1.5"><Phone size={14} /> Phone Number</span>
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                value={settingsPhone}
+                                                onChange={e => setSettingsPhone(e.target.value)}
+                                                placeholder="e.g. 0771234567"
+                                                className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                            />
+                                        </div>
+                                        <button
+                                            type="submit"
+                                            disabled={settingsSaving}
+                                            className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition shadow-md"
+                                        >
+                                            <Save size={16} />
+                                            {settingsSaving ? 'Saving...' : 'Save Changes'}
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Chat Tab */}
                         {activeTab === 'chat' && (
-                            <div className="h-[600px] bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                            <div className="h-[450px] sm:h-[600px] bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                                 <Chat
                                     initialContactId={chatTarget}
                                 // We might want to clear chatTarget when switching contacts inside Chat
@@ -586,6 +658,7 @@ const ParentDashboard = () => {
                         { id: 'payments', label: 'Payments', icon: '💰', badge: 0 },
                         { id: 'academic', label: 'Progress', icon: '📊', badge: 0 },
                         { id: 'chat', label: 'Messages', icon: '💬', badge: unreadCount },
+                        { id: 'settings', label: 'Settings', icon: '⚙️', badge: 0 },
                     ]}
                     activeTab={activeTab}
                     onTabChange={setActiveTab}
@@ -618,28 +691,30 @@ const ResultsTable = ({ studentId }) => {
     );
 
     return (
-        <table className="w-full text-left text-sm text-slate-600">
-            <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
-                <tr>
-                    <th className="p-4">Exam</th>
-                    <th className="p-4">Subject</th>
-                    <th className="p-4">Marks</th>
-                    <th className="p-4">Grade</th>
-                    <th className="p-4">Remarks</th>
-                </tr>
-            </thead>
-            <tbody className="text-slate-900">
-                {results.map(r => (
-                    <tr key={r.MarkID} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                        <td className="p-4 font-medium">{r.ExamName}</td>
-                        <td className="p-4 text-slate-500">{r.SubjectName}</td>
-                        <td className="p-4 font-bold text-lg">{r.Marks}</td>
-                        <td className="p-4"><span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs border border-blue-200 font-bold">{r.Grade}</span></td>
-                        <td className="p-4 text-slate-500 italic">{r.Remarks}</td>
+        <div className="overflow-x-auto">
+            <table className="w-full min-w-[500px] text-left text-sm text-slate-600">
+                <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                    <tr>
+                        <th className="p-4">Exam</th>
+                        <th className="p-4">Subject</th>
+                        <th className="p-4">Marks</th>
+                        <th className="p-4">Grade</th>
+                        <th className="p-4">Remarks</th>
                     </tr>
-                ))}
-            </tbody>
-        </table>
+                </thead>
+                <tbody className="text-slate-900">
+                    {results.map(r => (
+                        <tr key={r.MarkID} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                            <td className="p-4 font-medium">{r.ExamName}</td>
+                            <td className="p-4 text-slate-500">{r.SubjectName}</td>
+                            <td className="p-4 font-bold text-lg">{r.Marks}</td>
+                            <td className="p-4"><span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-xs border border-blue-200 font-bold">{r.Grade}</span></td>
+                            <td className="p-4 text-slate-500 italic">{r.Remarks}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 };
 
