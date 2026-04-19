@@ -235,11 +235,12 @@ const AdminDashboard = () => {
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`relative px-6 py-3 rounded-xl font-medium transition-all duration-300 capitalize whitespace-nowrap flex items-center gap-2 ${activeTab === tab ? 'glass-button bg-blue-600 text-white shadow-md' : 'bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'}`}
+                                aria-current={activeTab === tab ? 'page' : undefined}
+                                className={`relative px-6 py-3 rounded-xl font-medium transition-all duration-300 capitalize whitespace-nowrap flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === tab ? 'glass-button bg-blue-600 text-white shadow-md' : 'bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 border border-slate-200'}`}
                             >
                                 {label}
                                 {count > 0 && (
-                                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm pulse-animation">
+                                    <span aria-hidden="true" className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm motion-safe:animate-pulse">
                                         {count}
                                     </span>
                                 )}
@@ -269,8 +270,8 @@ const AdminDashboard = () => {
                             ].map((s, i) => (
                                 <div key={i} className={`bg-white border rounded-2xl p-4 flex flex-col gap-1 shadow-sm relative overflow-hidden ${s.alert ? 'border-red-200 bg-red-50/30' : 'border-slate-100'}`}>
                                     <div className="flex justify-between items-start">
-                                        <span className="text-2xl">{s.icon}</span>
-                                        {s.alert && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
+                                        <span className="text-2xl" aria-hidden="true">{s.icon}</span>
+                                        {s.alert && <span className="w-2 h-2 bg-red-500 rounded-full motion-safe:animate-pulse" aria-label="Needs attention" role="img"></span>}
                                     </div>
                                     <p className="text-2xl font-extrabold text-slate-900 mt-1">{s.value}</p>
                                     <p className="text-xs font-semibold text-slate-600">{s.label}</p>
@@ -289,15 +290,16 @@ const AdminDashboard = () => {
                                 { icon: '📚', emoji_bg: 'bg-amber-50', title: 'Manage Subjects', desc: 'Add or edit system subjects.', tab: 'subjects', color: 'amber', badge: null },
                                 { icon: '📅', emoji_bg: 'bg-slate-50', title: 'Timetable', desc: 'Schedule classes and weekly slots.', tab: 'timetable', color: 'slate', badge: null },
                             ].map((card, i) => (
-                                <div
+                                <button
                                     key={i}
                                     onClick={() => setActiveTab(card.tab)}
-                                    className="bg-white border border-slate-100 rounded-2xl p-5 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group flex items-start gap-4 relative overflow-hidden"
+                                    aria-label={card.badge > 0 ? `${card.title}, ${card.badge} pending` : card.title}
+                                    className="bg-white border border-slate-100 rounded-2xl p-5 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group flex items-start gap-4 relative overflow-hidden text-left w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                                 >
-                                    <div className={`w-12 h-12 ${card.emoji_bg} rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform relative`}>
+                                    <div className={`w-12 h-12 ${card.emoji_bg} rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform relative`} aria-hidden="true">
                                         {card.icon}
                                         {card.badge > 0 && (
-                                            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold shadow animate-pulse">
+                                            <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold shadow motion-safe:animate-pulse">
                                                 {card.badge}
                                             </span>
                                         )}
@@ -306,8 +308,8 @@ const AdminDashboard = () => {
                                         <h3 className="font-bold text-slate-900 text-base mb-0.5">{card.title}</h3>
                                         <p className="text-sm text-slate-500 leading-snug">{card.desc}</p>
                                     </div>
-                                    <span className="text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all text-lg flex-shrink-0">→</span>
-                                </div>
+                                    <span className="text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all text-lg flex-shrink-0" aria-hidden="true">→</span>
+                                </button>
                             ))}
                         </div>
                     </div>
@@ -361,7 +363,7 @@ const AdminDashboard = () => {
                                             </button>
                                         ))}
                                     </div>
-                                    <button onClick={fetchPayments} className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-sm transition border border-slate-200">↻</button>
+                                    <button onClick={fetchPayments} aria-label="Refresh payments" className="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-sm transition border border-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" aria-hidden="false"><span aria-hidden="true">↻</span></button>
                                 </div>
                             </div>
 
@@ -456,41 +458,46 @@ const AdminDashboard = () => {
                         <h3 className="text-xl font-bold text-slate-900 mb-6">Make an Announcement</h3>
                         <form onSubmit={handlePostAnnouncement} className="space-y-6">
                             <div>
-                                <label className="block text-sm text-slate-600 mb-2">Title</label>
+                                <label htmlFor="ann-title" className="block text-sm text-slate-600 mb-2">Title</label>
                                 <input
+                                    id="ann-title"
                                     value={annTitle}
                                     onChange={(e) => setAnnTitle(e.target.value)}
                                     required
-                                    className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500"
+                                    aria-required="true"
+                                    className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500"
                                     placeholder="Announcement Title"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-600 mb-2">Content</label>
+                                <label htmlFor="ann-content" className="block text-sm text-slate-600 mb-2">Content</label>
                                 <textarea
+                                    id="ann-content"
                                     value={annContent}
                                     onChange={(e) => setAnnContent(e.target.value)}
                                     required
+                                    aria-required="true"
                                     rows="4"
-                                    className="w-full px-4 py-3 glass-input outline-none resize-none transition focus:ring-1 focus:ring-blue-500"
+                                    className="w-full px-4 py-3 glass-input outline-none resize-none transition focus-visible:ring-2 focus-visible:ring-blue-500"
                                     placeholder="Write your announcement here..."
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm text-slate-600 mb-2">Target Audience</label>
+                                <label htmlFor="ann-target" className="block text-sm text-slate-600 mb-2">Target Audience</label>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <select value={annTarget} onChange={(e) => setAnnTarget(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                    <select id="ann-target" value={annTarget} onChange={(e) => setAnnTarget(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                         <option value="All">All Users</option>
                                         <option value="Teachers">Teachers Only</option>
-                                        <option value="Students">Students & Parents</option>
+                                        <option value="Students">Students &amp; Parents</option>
                                     </select>
-                                    <select value={annGrade} onChange={(e) => setAnnGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                    <label htmlFor="ann-grade" className="sr-only">Grade</label>
+                                    <select id="ann-grade" value={annGrade} onChange={(e) => setAnnGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                         <option value="All">All Grades</option>
                                         {[6, 7, 8, 9, 10, 11, 12, 13].map(g => <option key={g} value={g}>Grade {g}</option>)}
                                     </select>
                                 </div>
                             </div>
-                            <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10">Post Announcement</button>
+                            <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Post Announcement</button>
                         </form>
                     </div>
                 )}
@@ -502,15 +509,17 @@ const AdminDashboard = () => {
                             <div className="bg-white p-1 rounded-xl border border-slate-200 shadow-sm inline-flex">
                                 <button
                                     onClick={() => setTimetableMode('sessions')}
-                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition ${timetableMode === 'sessions' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 group'}`}
+                                    aria-pressed={timetableMode === 'sessions'}
+                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${timetableMode === 'sessions' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'}`}
                                 >
-                                    📆 One-off Sessions
+                                    <span aria-hidden="true">📆 </span>One-off Sessions
                                 </button>
                                 <button
                                     onClick={() => setTimetableMode('weekly')}
-                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition ${timetableMode === 'weekly' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'}`}
+                                    aria-pressed={timetableMode === 'weekly'}
+                                    className={`px-6 py-2 rounded-lg text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${timetableMode === 'weekly' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'}`}
                                 >
-                                    🔄 Weekly Timetable
+                                    <span aria-hidden="true">🔄 </span>Weekly Timetable
                                 </button>
                             </div>
                         </div>
@@ -523,25 +532,27 @@ const AdminDashboard = () => {
                                         <h3 className="text-xl font-bold text-slate-900 mb-6">Schedule Class</h3>
                                         <form onSubmit={handleScheduleClass} className="space-y-4">
                                             <div>
-                                                <label className="block text-sm text-slate-600 mb-2">Grade</label>
-                                                <select value={scheduleGrade} onChange={(e) => setScheduleGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                                <label htmlFor="sch-grade" className="block text-sm text-slate-600 mb-2">Grade</label>
+                                                <select id="sch-grade" value={scheduleGrade} onChange={(e) => setScheduleGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                                     {[6, 7, 8, 9, 10, 11, 12, 13].map(g => <option key={g} value={g}>Grade {g}</option>)}
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-slate-600 mb-2">Subject</label>
-                                                <select value={scheduleSubject} onChange={(e) => { setScheduleSubject(e.target.value); setScheduleTeacher(''); }} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                                <label htmlFor="sch-subject" className="block text-sm text-slate-600 mb-2">Subject</label>
+                                                <select id="sch-subject" value={scheduleSubject} onChange={(e) => { setScheduleSubject(e.target.value); setScheduleTeacher(''); }} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                                     <option value="">Select Subject</option>
                                                     {subjects.map(s => <option key={s.SubjectID} value={s.SubjectID}>{s.SubjectName}</option>)}
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-slate-600 mb-2">Teacher</label>
+                                                <label htmlFor="sch-teacher" className="block text-sm text-slate-600 mb-2">Teacher</label>
                                                 <select
+                                                    id="sch-teacher"
                                                     value={scheduleTeacher}
                                                     onChange={(e) => setScheduleTeacher(e.target.value)}
-                                                    className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500"
+                                                    className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500 disabled:text-slate-400 disabled:bg-slate-50"
                                                     disabled={!scheduleSubject}
+                                                    aria-disabled={!scheduleSubject}
                                                 >
                                                     <option value="">Select Teacher</option>
                                                     {tutors
@@ -555,20 +566,20 @@ const AdminDashboard = () => {
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-sm text-slate-600 mb-2">Date</label>
-                                                <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" min={getSLDate()} />
+                                                <label htmlFor="sch-date" className="block text-sm text-slate-600 mb-2">Date</label>
+                                                <input id="sch-date" type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" min={getSLDate()} />
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm text-slate-600 mb-2">Start Time</label>
-                                                    <input type="time" value={scheduleStart} onChange={(e) => setScheduleStart(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" />
+                                                    <label htmlFor="sch-start" className="block text-sm text-slate-600 mb-2">Start Time</label>
+                                                    <input id="sch-start" type="time" value={scheduleStart} onChange={(e) => setScheduleStart(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm text-slate-600 mb-2">End Time</label>
-                                                    <input type="time" value={scheduleEnd} onChange={(e) => setScheduleEnd(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" />
+                                                    <label htmlFor="sch-end" className="block text-sm text-slate-600 mb-2">End Time</label>
+                                                    <input id="sch-end" type="time" value={scheduleEnd} onChange={(e) => setScheduleEnd(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" />
                                                 </div>
                                             </div>
-                                            <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 mt-4">Schedule Class</button>
+                                            <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 mt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Schedule Class</button>
                                         </form>
                                     </>
                                 ) : (
@@ -708,7 +719,8 @@ const AdminDashboard = () => {
                                                             </div>
                                                             <button
                                                                 onClick={() => handleDeleteTimetable(tt.TimetableID)}
-                                                                className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition md:opacity-0 md:group-hover:opacity-100"
+                                                                aria-label={`Delete ${tt.SubjectName} slot on ${tt.DayOfWeek}`}
+                                                                className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition md:opacity-0 md:group-hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:opacity-100"
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                                     <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -728,36 +740,43 @@ const AdminDashboard = () => {
 
             {/* Modal for Adding Weekly Slot */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-up">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 motion-safe:animate-fade-in">
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="timetable-modal-title"
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden motion-safe:animate-scale-up"
+                    >
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                            <h3 className="text-xl font-bold text-slate-900">Add Weekly Slot</h3>
-                            <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
-                                <X size={18} />
+                            <h3 id="timetable-modal-title" className="text-xl font-bold text-slate-900">Add Weekly Slot</h3>
+                            <button onClick={() => setShowModal(false)} aria-label="Close modal" className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                                <X size={18} aria-hidden="true" />
                             </button>
                         </div>
                         <div className="p-6">
                             <form onSubmit={handleAddToTimetable} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-2">Grade</label>
-                                    <select value={modalGrade} onChange={(e) => setModalGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                    <label htmlFor="modal-grade" className="block text-sm text-slate-600 mb-2">Grade</label>
+                                    <select id="modal-grade" value={modalGrade} onChange={(e) => setModalGrade(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                         {[6, 7, 8, 9, 10, 11, 12, 13].map(g => <option key={g} value={g}>Grade {g}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-2">Subject</label>
-                                    <select value={modalSubject} onChange={(e) => { setModalSubject(e.target.value); setModalTeacher(''); }} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                    <label htmlFor="modal-subject" className="block text-sm text-slate-600 mb-2">Subject</label>
+                                    <select id="modal-subject" value={modalSubject} onChange={(e) => { setModalSubject(e.target.value); setModalTeacher(''); }} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                         <option value="">Select Subject</option>
                                         {subjects.map(s => <option key={s.SubjectID} value={s.SubjectID}>{s.SubjectName}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-2">Teacher</label>
+                                    <label htmlFor="modal-teacher" className="block text-sm text-slate-600 mb-2">Teacher</label>
                                     <select
+                                        id="modal-teacher"
                                         value={modalTeacher}
                                         onChange={(e) => setModalTeacher(e.target.value)}
-                                        className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500"
+                                        className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500 disabled:text-slate-400 disabled:bg-slate-50"
                                         disabled={!modalSubject}
+                                        aria-disabled={!modalSubject}
                                     >
                                         <option value="">Select Teacher</option>
                                         {tutors
@@ -771,8 +790,8 @@ const AdminDashboard = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-slate-600 mb-2">Day of Week</label>
-                                    <select value={modalDay} onChange={(e) => setModalDay(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500">
+                                    <label htmlFor="modal-day" className="block text-sm text-slate-600 mb-2">Day of Week</label>
+                                    <select id="modal-day" value={modalDay} onChange={(e) => setModalDay(e.target.value)} className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500">
                                         {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
                                             <option key={d} value={d}>{d}</option>
                                         ))}
@@ -780,15 +799,15 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm text-slate-600 mb-2">Start Time</label>
-                                        <input type="time" value={modalStart} onChange={(e) => setModalStart(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" />
+                                        <label htmlFor="modal-start" className="block text-sm text-slate-600 mb-2">Start Time</label>
+                                        <input id="modal-start" type="time" value={modalStart} onChange={(e) => setModalStart(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm text-slate-600 mb-2">End Time</label>
-                                        <input type="time" value={modalEnd} onChange={(e) => setModalEnd(e.target.value)} required className="w-full px-4 py-3 glass-input outline-none transition focus:ring-1 focus:ring-blue-500" />
+                                        <label htmlFor="modal-end" className="block text-sm text-slate-600 mb-2">End Time</label>
+                                        <input id="modal-end" type="time" value={modalEnd} onChange={(e) => setModalEnd(e.target.value)} required aria-required="true" className="w-full px-4 py-3 glass-input outline-none transition focus-visible:ring-2 focus-visible:ring-blue-500" />
                                     </div>
                                 </div>
-                                <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 mt-4">Add to Timetable</button>
+                                <button type="submit" className="w-full py-3.5 glass-button rounded-xl font-semibold transition shadow-lg shadow-blue-900/10 mt-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Add to Timetable</button>
                             </form>
                         </div>
                     </div>

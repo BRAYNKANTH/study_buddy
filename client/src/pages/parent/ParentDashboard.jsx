@@ -271,25 +271,30 @@ const ParentDashboard = () => {
                         {/* Navigation */}
                         {/* Navigation Menu — tab bar hidden on mobile, replaced by BottomNav */}
                         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-                            <div className="hidden md:flex space-x-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 w-full md:w-auto overflow-x-auto">
-                                <button onClick={() => setActiveTab('overview')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'overview' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                            <nav aria-label="Dashboard sections" className="hidden md:flex space-x-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 w-full md:w-auto overflow-x-auto">
+                                <button onClick={() => setActiveTab('overview')} aria-current={activeTab === 'overview' ? 'page' : undefined} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === 'overview' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
                                     Overview
                                 </button>
-                                <button onClick={() => setActiveTab('payments')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'payments' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
-                                    Fees & Payments
+                                <button onClick={() => setActiveTab('payments')} aria-current={activeTab === 'payments' ? 'page' : undefined} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === 'payments' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                                    Fees &amp; Payments
                                 </button>
-                                <button onClick={() => setActiveTab('academic')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ${activeTab === 'academic' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                                <button onClick={() => setActiveTab('academic')} aria-current={activeTab === 'academic' ? 'page' : undefined} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === 'academic' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
                                     Academic Progress
                                 </button>
-                                <button onClick={() => setActiveTab('chat')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'chat' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}>
+                                <button
+                                    onClick={() => setActiveTab('chat')}
+                                    aria-current={activeTab === 'chat' ? 'page' : undefined}
+                                    aria-label={unreadCount > 0 ? `Messages, ${unreadCount} unread` : 'Messages'}
+                                    className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === 'chat' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                                >
                                     Messages
                                     {unreadCount > 0 && (
-                                        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                                        <span aria-hidden="true" className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm motion-safe:animate-pulse">
                                             {unreadCount}
                                         </span>
                                     )}
                                 </button>
-                            </div>
+                            </nav>
 
                             <button onClick={() => window.location.href = '/parent/add-student'} className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-800/10 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 min-w-max">
                                 <span className="text-lg leading-none">+</span> Add New Student
@@ -317,7 +322,7 @@ const ParentDashboard = () => {
                                         {children.map(child => (
                                             <div key={child.StudentID} className="glass-card p-6 flex flex-col items-center bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group hover:border-blue-300 relative overflow-hidden">
                                                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                                                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform" aria-hidden="true">
                                                     🎓
                                                 </div>
                                                 <h3 className="text-xl font-bold text-slate-900 mb-1">{child.StudentName}</h3>
@@ -360,7 +365,7 @@ const ParentDashboard = () => {
                                                                                 setPayAmount(pendingPay.Amount); // If backend returns it
                                                                                 toast(`Please complete the payment of Rs. ${pendingPay.Amount} for registration.`, { icon: '⚠️' });
                                                                             }}
-                                                                            className="w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-amber-900/20 animate-pulse"
+                                                                            className="w-full px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-amber-900/20 motion-safe:animate-pulse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                                                                         >
                                                                             ⚠ Complete Payment
                                                                         </button>
@@ -479,47 +484,56 @@ const ParentDashboard = () => {
 
                                 {/* Payment Modal */}
                                 {showPayModal && (
-                                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 animate-fade-in">
-                                        <div className="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden animate-scale-in">
+                                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4 motion-safe:animate-fade-in">
+                                        <div
+                                            role="dialog"
+                                            aria-modal="true"
+                                            aria-labelledby="pay-modal-title"
+                                            className="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden motion-safe:animate-scale-in"
+                                        >
                                             <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50">
-                                                <h3 className="text-lg font-bold text-slate-900">Make a Payment</h3>
-                                                <button onClick={() => setShowPayModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
-                                                    <X size={18} />
+                                                <h3 id="pay-modal-title" className="text-lg font-bold text-slate-900">Make a Payment</h3>
+                                                <button
+                                                    onClick={() => setShowPayModal(false)}
+                                                    aria-label="Close payment form"
+                                                    className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                                                >
+                                                    <X size={18} aria-hidden="true" />
                                                 </button>
                                             </div>
                                             <div className="p-6 overflow-y-auto max-h-[80vh]">
-                                                <div className="flex bg-slate-100 rounded-lg p-1 mb-5 border border-slate-200">
-                                                    <button className={`flex-1 py-2 rounded-md transition text-sm font-medium ${paymentMode === 'card' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`} onClick={() => setPaymentMode('card')}>Pay Online (Card)</button>
-                                                    <button className={`flex-1 py-2 rounded-md transition text-sm font-medium ${paymentMode === 'slip' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`} onClick={() => setPaymentMode('slip')}>Upload Slip</button>
+                                                <div role="group" aria-label="Payment method" className="flex bg-slate-100 rounded-lg p-1 mb-5 border border-slate-200">
+                                                    <button aria-pressed={paymentMode === 'card'} className={`flex-1 py-2 rounded-md transition text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${paymentMode === 'card' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`} onClick={() => setPaymentMode('card')}>Pay Online (Card)</button>
+                                                    <button aria-pressed={paymentMode === 'slip'} className={`flex-1 py-2 rounded-md transition text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${paymentMode === 'slip' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`} onClick={() => setPaymentMode('slip')}>Upload Slip</button>
                                                 </div>
                                                 <form onSubmit={(e) => { handlePaymentSubmit(e); setShowPayModal(false); }} className="space-y-4">
                                                     <div>
-                                                        <label className="block text-sm text-slate-500 mb-2 font-medium">Student</label>
-                                                        <select value={payStudent} onChange={(e) => setPayStudent(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none">
+                                                        <label htmlFor="pay-student" className="block text-sm text-slate-500 mb-2 font-medium">Student</label>
+                                                        <select id="pay-student" value={payStudent} onChange={(e) => setPayStudent(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none">
                                                             {children.map(c => <option key={c.StudentID} value={c.StudentID}>{c.StudentName}</option>)}
                                                         </select>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm text-slate-500 mb-2 font-medium">Month</label>
-                                                        <input type="month" value={payMonth} onChange={(e) => setPayMonth(e.target.value)} required className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                        <label htmlFor="pay-month" className="block text-sm text-slate-500 mb-2 font-medium">Month</label>
+                                                        <input id="pay-month" type="month" value={payMonth} onChange={(e) => setPayMonth(e.target.value)} required aria-required="true" className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none" />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm text-slate-500 mb-2 font-medium">Amount (LKR)</label>
-                                                        <input type="number" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} required className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none" />
+                                                        <label htmlFor="pay-amount" className="block text-sm text-slate-500 mb-2 font-medium">Amount (LKR)</label>
+                                                        <input id="pay-amount" type="number" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} required aria-required="true" className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none" />
                                                     </div>
                                                     {paymentMode === 'slip' && (
                                                         <>
                                                             <div>
-                                                                <label className="block text-sm text-slate-500 mb-2 font-medium">Reference No</label>
-                                                                <input type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Bank Ref No (Optional)" />
+                                                                <label htmlFor="pay-ref" className="block text-sm text-slate-500 mb-2 font-medium">Reference No</label>
+                                                                <input id="pay-ref" type="text" value={payRef} onChange={(e) => setPayRef(e.target.value)} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-500 outline-none" placeholder="Bank Ref No (Optional)" />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-slate-500 mb-2 font-medium">Upload Receipt</label>
-                                                                <input type="file" onChange={(e) => setPayFile(e.target.files[0])} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100" accept="image/*,application/pdf" />
+                                                                <label htmlFor="pay-receipt" className="block text-sm text-slate-500 mb-2 font-medium">Upload Receipt</label>
+                                                                <input id="pay-receipt" type="file" onChange={(e) => setPayFile(e.target.files[0])} className="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-slate-900 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100" accept="image/*,application/pdf" />
                                                             </div>
                                                         </>
                                                     )}
-                                                    <button type="submit" className="w-full py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg hover:shadow-blue-500/20 font-bold transition-all">
+                                                    <button type="submit" className="w-full py-3.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg hover:shadow-blue-500/20 font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                                                         {paymentMode === 'card' ? `Pay LKR ${payAmount || '0.00'} Now` : 'Submit Receipt'}
                                                     </button>
                                                     {paymentMode === 'card' && <p className="text-xs text-center text-slate-400">Secured by PayHere</p>}
@@ -536,12 +550,12 @@ const ParentDashboard = () => {
                             <div className="glass-card p-8 bg-white border border-slate-200 rounded-2xl shadow-sm h-full min-h-[500px]">
                                 <div className="flex justify-between items-center mb-6">
                                     <h2 className="text-xl font-bold text-slate-900">Exam Results</h2>
+                                    <label htmlFor="results-child" className="sr-only">Select student</label>
                                     <select
+                                        id="results-child"
                                         value={selectedChild}
-                                        onChange={(e) => {
-                                            setSelectedChild(e.target.value);
-                                        }}
-                                        className="px-4 py-2 bg-white border border-slate-300 rounded-lg outline-none text-sm focus:ring-2 focus:ring-blue-500"
+                                        onChange={(e) => setSelectedChild(e.target.value)}
+                                        className="px-4 py-2 bg-white border border-slate-300 rounded-lg outline-none text-sm focus-visible:ring-2 focus-visible:ring-blue-500"
                                     >
                                         {children.map(c => <option key={c.StudentID} value={c.StudentID}>{c.StudentName}</option>)}
                                     </select>
