@@ -98,6 +98,10 @@ const Chat = ({ initialContact, onMessageRead, isEmbedded = false, forcedContact
     const handleSelectContact = (contact) => {
         setSelectedContact(contact);
         setMobileView('chat');
+        // Optimistically clear unread count for this contact
+        setContacts(prev => prev.map(c =>
+            c.ContactID === contact.ContactID ? { ...c, UnreadCount: 0 } : c
+        ));
     };
 
     const handleDeleteChat = (contact, e) => {
@@ -206,7 +210,14 @@ const Chat = ({ initialContact, onMessageRead, isEmbedded = false, forcedContact
                                 </select>
                             </div>
                         )}
-                        <p className="text-xs text-slate-500 mt-2">{filteredContacts.length} Contacts</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                            {filteredContacts.length} Contacts
+                            {filteredContacts.reduce((sum, c) => sum + (c.UnreadCount || 0), 0) > 0 && (
+                                <span className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full">
+                                    {filteredContacts.reduce((sum, c) => sum + (c.UnreadCount || 0), 0)} unread
+                                </span>
+                            )}
+                        </p>
                     </div>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -215,27 +226,67 @@ const Chat = ({ initialContact, onMessageRead, isEmbedded = false, forcedContact
                         ) : filteredContacts.length === 0 ? (
                             <p className="p-4 text-slate-400 text-sm text-center">No contacts found.</p>
                         ) : (
-                            filteredContacts.map((contact, idx) => (
-                                <div
-                                    key={`${contact.ContactID}-${contact.SubjectName}-${idx}`}
-                                    onClick={() => handleSelectContact(contact)}
-                                    className={`p-4 cursor-pointer transition border-b border-slate-100 hover:bg-white flex justify-between items-center group ${selectedContact?.ContactID === contact.ContactID ? 'bg-blue-100/50 border-l-4 border-l-blue-600' : ''}`}
-                                >
-                                    <div className="min-w-0 flex-1">
-                                        <div className="font-bold text-slate-800 text-sm truncate">{contact.ContactName}</div>
-                                        <div className="text-xs text-slate-500 mt-0.5 truncate">
-                                            {contact.Role}{contact.SubjectName ? ` • ${contact.SubjectName}` : ''}
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={(e) => handleDeleteChat(contact, e)}
-                                        className="p-2 ml-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full md:opacity-0 md:group-hover:opacity-100 transition flex-shrink-0"
-                                        title="Delete Chat"
+                            filteredContacts.map((contact, idx) => {
+                                const initials = contact.ContactName
+                                    .split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase();
+                                const hasUnread = contact.UnreadCount > 0;
+                                const isSelected = selectedContact?.ContactID === contact.ContactID;
+                                return (
+                                    <div
+                                        key={`${contact.ContactID}-${contact.SubjectName}-${idx}`}
+                                        onClick={() => handleSelectContact(contact)}
+                                        className={`px-4 py-3 cursor-pointer transition border-b border-slate-100 hover:bg-white flex items-center gap-3 group ${isSelected ? 'bg-blue-50 border-l-4 border-l-blue-600' : hasUnread ? 'bg-blue-50/40' : ''}`}
                                     >
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
-                            ))
+                                        {/* Avatar */}
+                                        <div className={`w-11 h-11 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                                            {initials}
+                                        </div>
+
+                                        {/* Text */}
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex justify-between items-baseline gap-1">
+                                                <span className={`text-sm truncate ${hasUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-700'}`}>
+                                                    {contact.ContactName}
+                                                </span>
+                                                {contact.LastMessageTime && (
+                                                    <span className={`text-[10px] flex-shrink-0 ${hasUnread ? 'text-blue-600 font-semibold' : 'text-slate-400'}`}>
+                                                        {(() => {
+                                                            const d = new Date(contact.LastMessageTime);
+                                                            const now = new Date();
+                                                            const isToday = d.toDateString() === now.toDateString();
+                                                            return isToday
+                                                                ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                                                : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                                                        })()}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex justify-between items-center mt-0.5 gap-1">
+                                                <span className={`text-xs truncate ${hasUnread ? 'text-slate-700' : 'text-slate-400'}`}>
+                                                    {contact.LastMessage
+                                                        ? contact.LastMessage
+                                                        : <span className="italic">{contact.Role}{contact.SubjectName ? ` • ${contact.SubjectName}` : ''}</span>
+                                                    }
+                                                </span>
+                                                {hasUnread && (
+                                                    <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                                        {contact.UnreadCount > 9 ? '9+' : contact.UnreadCount}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Delete (hover) */}
+                                        <button
+                                            onClick={(e) => handleDeleteChat(contact, e)}
+                                            className="p-1.5 ml-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition flex-shrink-0"
+                                            title="Delete Chat"
+                                        >
+                                            <Trash2 size={13} />
+                                        </button>
+                                    </div>
+                                );
+                            })
                         )}
                     </div>
                 </div>
