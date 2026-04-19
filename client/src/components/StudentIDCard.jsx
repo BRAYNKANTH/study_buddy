@@ -64,48 +64,48 @@ const StudentIDCard = ({ student, onClose }) => {
                             background: '#ffffff',
                         }}
                     >
-                        {/* ── LEFT STRIPE (premium navy) ── */}
+                        {/* ── LEFT STRIPE (Solid Navy) ── */}
                         <div style={{
                             position: 'absolute', left: 0, top: 0, bottom: 0,
                             width: '120px',
-                            background: 'linear-gradient(135deg, #0f172a 0%, #1e40af 100%)',
+                            background: '#0f172a',
                             display: 'flex', flexDirection: 'column',
                             alignItems: 'center', justifyContent: 'center',
-                            gap: '12px', padding: '16px 12px',
-                            boxShadow: '4px 0 16px rgba(0,0,0,0.1)',
-                            zIndex: 10
+                            padding: '16px 12px',
+                            borderTopLeftRadius: '14px',
+                            borderBottomLeftRadius: '14px',
                         }}>
                             {/* School Monogram */}
                             <div style={{
-                                width: '60px', height: '60px', borderRadius: '50%',
-                                background: 'rgba(255,255,255,0.1)',
-                                border: '2px solid rgba(255,255,255,0.2)',
+                                width: '56px', height: '56px', borderRadius: '50%',
+                                background: '#1e293b',
+                                border: '2px solid #334155',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                marginBottom: '14px'
                             }}>
-                                <span style={{ fontSize: '30px', fontWeight: 900, color: '#fff', letterSpacing: '-1px' }}>T</span>
+                                <span style={{ fontSize: '28px', fontWeight: 900, color: '#fff', letterSpacing: '-1px' }}>T</span>
                             </div>
 
                             {/* School name vertical */}
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ color: '#bfdbfe', fontSize: '9px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+                            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                                <div style={{ color: '#fff', fontSize: '10px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase' }}>
                                     Theebam
                                 </div>
-                                <div style={{ color: 'rgba(191,219,254,0.6)', fontSize: '7px', letterSpacing: '0.5px', marginTop: '2px' }}>
+                                <div style={{ color: '#94a3b8', fontSize: '7px', letterSpacing: '0.5px', marginTop: '2px' }}>
                                     Education Centre
                                 </div>
                             </div>
 
                             {/* Grade badge */}
                             <div style={{
-                                background: 'rgba(255,255,255,0.1)',
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                borderRadius: '8px', padding: '6px 12px',
+                                background: '#1e293b',
+                                border: '1px solid #334155',
+                                borderRadius: '8px', padding: '6px 0',
                                 textAlign: 'center',
                                 width: '100%',
-                                marginTop: '4px'
                             }}>
-                                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '8px', fontWeight: 700, letterSpacing: '1px' }}>GRADE</div>
-                                <div style={{ color: '#fff', fontSize: '20px', fontWeight: 900, lineHeight: 1, marginTop: '2px' }}>{student.Grade}</div>
+                                <div style={{ color: '#94a3b8', fontSize: '8px', fontWeight: 700, letterSpacing: '1px' }}>GRADE</div>
+                                <div style={{ color: '#fff', fontSize: '22px', fontWeight: 900, lineHeight: 1, marginTop: '2px' }}>{student.Grade}</div>
                             </div>
                         </div>
 
@@ -114,31 +114,31 @@ const StudentIDCard = ({ student, onClose }) => {
                             position: 'absolute', left: '120px', right: 0, top: 0, bottom: 0,
                             background: '#fff',
                             display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                            padding: '24px',
-                            zIndex: 5
+                            padding: '16px 20px',
+                            borderTopRightRadius: '14px',
+                            borderBottomRightRadius: '14px',
                         }}>
                             {/* Top section */}
                             <div>
-                                {/* Card type label */}
                                 <div style={{
                                     display: 'inline-block',
                                     background: '#f1f5f9', border: '1px solid #e2e8f0',
                                     borderRadius: '6px', padding: '4px 10px',
                                     fontSize: '9px', fontWeight: 800,
-                                    color: '#334155', letterSpacing: '1.5px',
-                                    textTransform: 'uppercase', marginBottom: '8px',
+                                    color: '#334155', letterSpacing: '1px',
+                                    textTransform: 'uppercase', marginBottom: '2px',
                                 }}>
                                     Student ID Card
                                 </div>
 
                                 {/* Student Name */}
                                 <div style={{
-                                    fontSize: '24px', fontWeight: 900,
-                                    color: '#0f172a', lineHeight: 'normal',
-                                    paddingTop: '2px', // Solves top cutoff
+                                    fontSize: '22px', fontWeight: 900,
+                                    color: '#0f172a', lineHeight: 1,
+                                    paddingTop: '6px', // Crucial spacer to prevent text bounding box clipping the top
                                     paddingBottom: '2px',
-                                    maxWidth: '200px',
                                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                    maxWidth: '220px',
                                 }}>
                                     {student.StudentName}
                                 </div>
@@ -146,8 +146,8 @@ const StudentIDCard = ({ student, onClose }) => {
                                 {/* Student ID */}
                                 <div style={{
                                     fontFamily: 'monospace', fontSize: '13px',
-                                    color: '#2563eb', letterSpacing: '1.5px',
-                                    fontWeight: 700, marginTop: '4px'
+                                    color: '#2563eb', letterSpacing: '2px',
+                                    fontWeight: 700,
                                 }}>
                                     {student.StudentID}
                                 </div>
@@ -157,12 +157,12 @@ const StudentIDCard = ({ student, onClose }) => {
                             <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
                                 <div>
                                     <div style={{ fontSize: '8px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px' }}>Academic Year</div>
-                                    <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>{new Date().getFullYear()}</div>
+                                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>{new Date().getFullYear()}</div>
                                 </div>
-                                <div style={{ width: '1px', height: '24px', background: '#e2e8f0' }}></div>
+                                <div style={{ width: '1px', height: '20px', background: '#e2e8f0' }}></div>
                                 <div>
                                     <div style={{ fontSize: '8px', color: '#64748b', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px' }}>Status</div>
-                                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <div style={{ fontSize: '12px', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                         <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div>
                                         Active
                                     </div>
@@ -172,7 +172,7 @@ const StudentIDCard = ({ student, onClose }) => {
                             {/* QR + bottom strip */}
                             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                                 {/* Bottom label */}
-                                <div style={{ fontSize: '9px', color: '#94a3b8', maxWidth: '120px', lineHeight: 1.5, fontWeight: 500 }}>
+                                <div style={{ fontSize: '9px', color: '#94a3b8', lineHeight: 1.5, fontWeight: 500, paddingBottom: '2px' }}>
                                     Scan QR to mark<br />attendance.
                                     <div style={{ color: '#2563eb', fontWeight: 700, marginTop: '2px' }}>theebam.edu.lk</div>
                                 </div>
@@ -181,13 +181,12 @@ const StudentIDCard = ({ student, onClose }) => {
                                 <div style={{
                                     background: '#fff',
                                     border: '1px solid #e2e8f0',
-                                    borderRadius: '10px',
-                                    padding: '6px',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                                    borderRadius: '8px',
+                                    padding: '5px',
                                 }}>
                                     <QRCodeSVG
                                         value={student.StudentID}
-                                        size={64}
+                                        size={56}
                                         level="H"
                                         includeMargin={false}
                                         fgColor="#0f172a"
