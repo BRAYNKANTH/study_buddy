@@ -10,16 +10,13 @@ const Login = () => {
     const { login, user } = useAuth();
     const navigate = useNavigate();
 
-    // Already logged in — go back to where they came from
+    // Already logged in — replace /login in history with their dashboard
+    // (replace:true removes /login from history so back button never returns here)
     if (user) {
-        if (window.history.length > 1) {
-            navigate(-1);
-        } else {
-            const dest = user.role === 'admin' ? '/admin/dashboard'
-                       : user.role === 'teacher' ? '/tutor/dashboard'
-                       : '/parent/dashboard';
-            navigate(dest, { replace: true });
-        }
+        const dest = user.role === 'admin' ? '/admin/dashboard'
+                   : user.role === 'teacher' ? '/tutor/dashboard'
+                   : '/parent/dashboard';
+        navigate(dest, { replace: true });
         return null;
     }
 
