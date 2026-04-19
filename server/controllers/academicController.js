@@ -184,14 +184,16 @@ const getEnrolledSubjects = async (req, res) => {
     const { studentId } = req.params;
     try {
         const [subjects] = await db.query(`
-            SELECT s.SubjectID, s.SubjectName, u.FullName as TeacherName, u.UserID as TeacherID
+            SELECT s.SubjectID, s.SubjectName,
+                   ANY_VALUE(u.FullName) as TeacherName,
+                   ANY_VALUE(u.UserID)   as TeacherID
             FROM Enrollment e
             JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
             JOIN Subject s ON sg.SubjectID = s.SubjectID
             LEFT JOIN TeacherSubject ts ON s.SubjectID = ts.SubjectID
             LEFT JOIN User u ON ts.TeacherID = u.UserID AND u.Role = 'teacher'
             WHERE e.StudentID = ?
-            GROUP BY s.SubjectID
+            GROUP BY s.SubjectID, s.SubjectName
             `, [studentId]);
         res.json(subjects);
     } catch (err) {
