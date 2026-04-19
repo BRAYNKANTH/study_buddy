@@ -372,11 +372,23 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
                                                 <div className="text-xs text-slate-500">{ex.Term} • {new Date(ex.Date).toLocaleDateString()}</div>
                                             </div>
                                             <button
-                                                onClick={() => {
+                                                onClick={async () => {
                                                     setSelectedExamForMarks(ex);
                                                     // Initialize marks data
                                                     const initialMarks = {};
                                                     students.forEach(s => initialMarks[s.StudentID] = { marks: '', remarks: '' });
+                                                    
+                                                    try {
+                                                        const res = await api.get(`/academic/marks/exam/${ex.ExamID}`);
+                                                        res.data.forEach(m => {
+                                                            if (initialMarks[m.StudentID]) {
+                                                                initialMarks[m.StudentID] = { marks: m.Marks, remarks: m.Remarks || '' };
+                                                            }
+                                                        });
+                                                    } catch (err) {
+                                                        console.error("Failed to fetch existing marks", err);
+                                                    }
+                                                    
                                                     setMarksData(initialMarks);
                                                 }}
                                                 className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 border border-blue-200 rounded-lg text-sm font-bold transition"

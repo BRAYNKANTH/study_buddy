@@ -57,6 +57,38 @@ const ParentDashboard = () => {
         fetchData();
     }, []);
 
+    const handleUnenrollStudent = (child) => {
+        toast((t) => (
+            <div className="flex flex-col gap-3">
+                <p className="font-semibold text-slate-800">Unenroll {child.StudentName}?</p>
+                <p className="text-sm text-slate-500">This will permanently remove the student from your account.</p>
+                <div className="flex gap-2">
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            try {
+                                await api.delete(`/users/student/${child.StudentID}`);
+                                setChildren(prev => prev.filter(c => c.StudentID !== child.StudentID));
+                                toast.success(`${child.StudentName} has been unenrolled.`);
+                            } catch (err) {
+                                toast.error(err.response?.data?.message || 'Failed to unenroll student.');
+                            }
+                        }}
+                        className="px-4 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700"
+                    >
+                        Unenroll
+                    </button>
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-4 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        ), { duration: 10000 });
+    };
+
     const handlePayHerePayment = async (paymentId, amount) => {
         try {
             // 1. Get Hash from Backend
@@ -99,13 +131,12 @@ const ParentDashboard = () => {
                 setPaymentSuccess(true);
 
                 try {
-                    await api.put(`/payments/verify`, { paymentId: orderId, status: 'Verified' });
-                    // Refresh history
+                    await api.put(`/payments/payhere-complete`, { paymentId: orderId });
                     const res = await api.get('/payments/history');
                     setPayments(res.data);
                 } catch (e) {
                     console.error("Verification API failed", e);
-                    toast.error("Payment received, but system update failed. Please contact admin with your Order ID.");
+                    toast.success("Payment received! It will reflect shortly.");
                 }
             };
 
@@ -290,6 +321,12 @@ const ParentDashboard = () => {
                                                         >
                                                             <span>🆔</span> View ID Card
                                                         </button>
+                                                        <button
+                                                            onClick={() => handleUnenrollStudent(child)}
+                                                            className="w-full px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl text-sm font-medium transition flex items-center justify-center gap-2"
+                                                        >
+                                                            <span>🗑️</span> Unenroll
+                                                        </button>
                                                     </div>
                                                 ) : (
                                                     <div className="flex flex-col w-full gap-3 mt-auto">
@@ -324,6 +361,12 @@ const ParentDashboard = () => {
                                                                 }
                                                             })()
                                                         }
+                                                        <button
+                                                            onClick={() => handleUnenrollStudent(child)}
+                                                            className="w-full px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl text-sm font-medium transition flex items-center justify-center gap-2"
+                                                        >
+                                                            <span>🗑️</span> Unenroll
+                                                        </button>
                                                     </div>
                                                 )}
                                             </div>

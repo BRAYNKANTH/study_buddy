@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createExam, getExams, enterMarks, enterBatchMarks, getStudentResults, getSubjects, getEnrolledSubjects, getStudyMaterials, getStudentTimetable, createSession, getAllSessions, enrollStudent, unenrollStudent, getTeacherTimetable, uploadStudyMaterial, downloadMaterial, createSubject, deleteSubject, addToTimetable, getAllTimetable, deleteTimetableEntry } = require('../controllers/academicController');
+const { createExam, getExams, enterMarks, enterBatchMarks, getExamMarks, getStudentResults, getSubjects, getEnrolledSubjects, getStudyMaterials, getStudentTimetable, createSession, getAllSessions, enrollStudent, unenrollStudent, getTeacherTimetable, uploadStudyMaterial, downloadMaterial, createSubject, deleteSubject, addToTimetable, getAllTimetable, deleteTimetableEntry } = require('../controllers/academicController');
 const { verifyToken, verifyRole } = require('../middleware/authMiddleware');
 
 router.post('/exams', verifyToken, verifyRole(['teacher', 'admin']), createExam);
@@ -10,6 +10,7 @@ router.post('/subjects', verifyToken, verifyRole(['admin']), createSubject);
 router.delete('/subjects/:subjectId', verifyToken, verifyRole(['admin']), deleteSubject);
 router.post('/marks', verifyToken, verifyRole(['teacher']), enterMarks);
 router.post('/marks/batch', verifyToken, verifyRole(['teacher']), enterBatchMarks);
+router.get('/marks/exam/:examId', verifyToken, verifyRole(['teacher', 'admin']), getExamMarks);
 router.get('/results/:studentId', verifyToken, verifyRole(['parent', 'teacher', 'admin']), getStudentResults);
 router.get('/enrollments/:studentId', verifyToken, verifyRole(['parent', 'student']), getEnrolledSubjects);
 router.get('/materials/:subjectId', verifyToken, verifyRole(['parent', 'student', 'teacher', 'admin']), getStudyMaterials);
@@ -51,6 +52,6 @@ router.get('/sessions', verifyToken, verifyRole(['admin', 'teacher']), getAllSes
 
 // File Upload Route
 router.post('/materials', verifyToken, verifyRole(['teacher']), upload.single('file'), uploadStudyMaterial);
-router.get('/materials/download/:filename', verifyToken, downloadMaterial);
+router.get('/materials/download/:filename', downloadMaterial);
 
 module.exports = router;

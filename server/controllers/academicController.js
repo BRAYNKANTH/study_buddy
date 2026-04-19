@@ -116,18 +116,30 @@ const enterBatchMarks = async (req, res) => {
         // Use a transaction or Promise.all. Simple loop for now.
         for (const data of marksData) {
             const markId = 'M_' + examId + '_' + data.studentId.slice(-4);
-            // UPSERT logic
+            // UPSERT logic using explicit parameters for MariaDB compatibility
             await db.query(
                 `INSERT INTO Marks (MarkID, ExamID, StudentID, Marks, Remarks, UploadDate)
-                 VALUES (?, ?, ?, ?, ?, NOW()) AS new_vals
-                 ON DUPLICATE KEY UPDATE Marks = new_vals.Marks, Remarks = new_vals.Remarks`,
-                [markId, examId, data.studentId, data.marks, data.remarks || '']
+                 VALUES (?, ?, ?, ?, ?, NOW())
+                 ON DUPLICATE KEY UPDATE Marks = ?, Remarks = ?`,
+                [markId, examId, data.studentId, data.marks, data.remarks || '', data.marks, data.remarks || '']
             );
         }
         res.json({ message: "Batch marks updated successfully" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error updating batch marks" });
+    }
+};
+
+// Get Exam Marks (Tutor)
+const getExamMarks = async (req, res) => {
+    const { examId } = req.params;
+    try {
+        const [marks] = await db.query("SELECT * FROM Marks WHERE ExamID = ?", [examId]);
+        res.json(marks);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error fetching exam marks" });
     }
 };
 
@@ -538,4 +550,4 @@ const deleteTimetableEntry = async (req, res) => {
     }
 };
 
-module.exports = { createExam, getExams, enterMarks, enterBatchMarks, getStudentResults, getSubjects, getEnrolledSubjects, getStudyMaterials, getStudentTimetable, createSession, getAllSessions, enrollStudent, unenrollStudent, getTeacherTimetable, uploadStudyMaterial, downloadMaterial, createSubject, deleteSubject, addToTimetable, getAllTimetable, deleteTimetableEntry };
+module.exports = { createExam, getExams, enterMarks, enterBatchMarks, getExamMarks, getStudentResults, getSubjects, getEnrolledSubjects, getStudyMaterials, getStudentTimetable, createSession, getAllSessions, enrollStudent, unenrollStudent, getTeacherTimetable, uploadStudyMaterial, downloadMaterial, createSubject, deleteSubject, addToTimetable, getAllTimetable, deleteTimetableEntry };

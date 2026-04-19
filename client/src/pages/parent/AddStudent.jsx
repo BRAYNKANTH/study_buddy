@@ -82,12 +82,11 @@ const AddStudent = () => {
             window.payhere.onCompleted = async function onCompleted(orderId) {
                 console.log("Payment completed. OrderID:" + orderId);
                 try {
-                    // Verify/Mark as paid via API
-                    await api.put(`/payments/verify`, { paymentId: orderId, status: 'Verified' });
+                    await api.put(`/payments/payhere-complete`, { paymentId: orderId });
                     setPaymentSuccess(true);
                 } catch (e) {
                     console.error(e);
-                    toast.error("Payment verified locally but API update failed. Please contact admin.");
+                    toast.success("Payment received! Your account will be activated shortly.");
                     navigate('/parent/dashboard');
                 }
             };

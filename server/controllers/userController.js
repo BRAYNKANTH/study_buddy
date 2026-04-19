@@ -325,9 +325,18 @@ const deleteUser = async (req, res) => {
 // Delete Student (Cascading)
 const deleteStudent = async (req, res) => {
     const { id } = req.params;
+    const { role, id: userId } = req.user;
     const conn = await db.getConnection();
     try {
         await conn.beginTransaction();
+
+        if (role === 'parent') {
+            const [owns] = await conn.query("SELECT StudentID FROM Student WHERE StudentID = ? AND ParentID = ?", [id, userId]);
+            if (owns.length === 0) {
+                await conn.rollback();
+                return res.status(403).json({ message: "You do not have permission to unenroll this student" });
+            }
+        }
 
         await conn.query("DELETE FROM Enrollment WHERE StudentID = ?", [id]);
         await conn.query("DELETE FROM Payment WHERE StudentID = ?", [id]);
