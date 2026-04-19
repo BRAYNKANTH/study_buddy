@@ -12,6 +12,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
     origin: [
         process.env.CLIENT_URL,
+        process.env.CLIENT_URL ? process.env.CLIENT_URL.replace('https://', 'https://www.') : null,
+        process.env.CLIENT_URL ? process.env.CLIENT_URL.replace('https://www.', 'https://') : null,
         'http://localhost:3000',
         'http://localhost:5173'
     ].filter(Boolean),
