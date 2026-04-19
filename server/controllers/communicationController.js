@@ -18,7 +18,7 @@ const sendMessage = async (req, res) => {
     }
 };
 
-// Get Chat History
+// Get Chat History (also marks messages from contact as read)
 const getChatHistory = async (req, res) => {
     const userId = req.user.id;
     const { contactId } = req.params;
@@ -30,9 +30,9 @@ const getChatHistory = async (req, res) => {
             ORDER BY Timestamp ASC
         `, [userId, contactId, contactId, userId]);
 
-        // Mark as read: messages sent to this user from this contact
+        // Mark incoming messages from this contact as read
         await db.query(
-            "UPDATE Chat SET IsRead = TRUE WHERE SenderID = ? AND ReceiverID = ? AND IsRead = FALSE",
+            `UPDATE Chat SET IsRead = TRUE WHERE SenderID = ? AND ReceiverID = ? AND IsRead = FALSE`,
             [contactId, userId]
         );
 

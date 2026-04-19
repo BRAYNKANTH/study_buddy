@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import QRScanner from '../../components/QRScanner';
 import StudentDetailModal from '../../components/StudentDetailModal';
+import { generateReport } from '../../utils/reportGenerator';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -177,10 +178,84 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
             setViewSessionLoading(false);
         } catch (err) {
             console.error(err);
-            toast.error("Failed to fetch attendance list.");
-            setViewSessionLoading(false);
-            setViewSession(null);
         }
+    };
+
+    const handleExportMarks = async (exam) => {
+        try {
+            const res = await api.get(`/academic/marks/exam/${exam.ExamID}`);
+            const examMarks = res.data;
+
+            const columns = [
+                { header: 'Student ID', dataKey: 'sid' },
+                { header: 'Student Name', dataKey: 'name' },
+                { header: 'Marks', dataKey: 'marks' },
+                { header: 'Grade', dataKey: 'grade' },
+                { header: 'Remarks', dataKey: 'remarks' }
+            ];
+
+            const data = students.map(s => {
+                const m = examMarks.find(mark => mark.StudentID === s.StudentID);
+                // Calculate grade locally if not provided
+                const score = m ? parseInt(m.Marks) : 0;
+                let gradeStr = 'F';
+                if (score >= 75) gradeStr = 'A';
+                else if (score >= 65) gradeStr = 'B';
+                else if (score >= 55) gradeStr = 'C';
+                else if (score >= 45) gradeStr = 'S';
+
+                return {
+                    sid: s.StudentID,
+                    name: s.StudentName,
+                    marks: m ? m.Marks : 'N/A',
+                    grade: m ? (m.Grade || gradeStr) : 'N/A',
+                    remarks: m ? (m.Remarks || '-') : '-'
+                };
+            });
+
+            generateReport({
+                title: 'Exam Marks Report',
+                subtitle: `${exam.ExamName} | ${subject.SubjectName} - Grade ${grade}`,
+                filename: `Marks_${exam.ExamName.replace(/\s+/g, '_')}_${grade}`,
+                columns,
+                data
+            });
+            toast.success("Marks report generated!");
+        } catch (err) {
+            toast.error("Failed to generate marks report");
+        }
+    };
+
+    const handleExportAttendance = () => {
+        if (!viewSessionStudents || viewSessionStudents.length === 0) {
+            toast.error("No attendees to export");
+            return;
+        }
+
+        const columns = [
+            { header: '#', dataKey: 'index' },
+            { header: 'Student ID', dataKey: 'sid' },
+            { header: 'Student Name', dataKey: 'name' },
+            { header: 'Status', dataKey: 'status' },
+            { header: 'Scanned At', dataKey: 'time' }
+        ];
+
+        const data = viewSessionStudents.map((s, i) => ({
+            index: i + 1,
+            sid: s.StudentID || 'N/A',
+            name: s.StudentName,
+            status: 'Present',
+            time: s.ScannedAt ? new Date(s.ScannedAt).toLocaleTimeString() : 'N/A'
+        }));
+
+        generateReport({
+            title: 'Session Attendance Report',
+            subtitle: `Session: ${new Date(viewSession.Date).toLocaleDateString()} | ${viewSession.StartTime.slice(0, 5)} - ${viewSession.EndTime.slice(0, 5)} | ${subject.SubjectName} (Grade ${grade})`,
+            filename: `Attendance_${new Date(viewSession.Date).toISOString().split('T')[0]}_Grade${grade}`,
+            columns,
+            data
+        });
+        toast.success("Attendance report generated!");
     };
 
     return (
@@ -373,30 +448,39 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
                                                 <div className="text-slate-900 font-bold">{ex.ExamName}</div>
                                                 <div className="text-xs text-slate-500">{ex.Term} • {new Date(ex.Date).toLocaleDateString()}</div>
                                             </div>
-                                            <button
-                                                onClick={async () => {
-                                                    setSelectedExamForMarks(ex);
-                                                    // Initialize marks data
-                                                    const initialMarks = {};
-                                                    students.forEach(s => initialMarks[s.StudentID] = { marks: '', remarks: '' });
-                                                    
-                                                    try {
-                                                        const res = await api.get(`/academic/marks/exam/${ex.ExamID}`);
-                                                        res.data.forEach(m => {
-                                                            if (initialMarks[m.StudentID]) {
-                                                                initialMarks[m.StudentID] = { marks: m.Marks, remarks: m.Remarks || '' };
-                                                            }
-                                                        });
-                                                    } catch (err) {
-                                                        console.error("Failed to fetch existing marks", err);
-                                                    }
-                                                    
-                                                    setMarksData(initialMarks);
-                                                }}
-                                                className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 border border-blue-200 rounded-lg text-sm font-bold transition"
-                                            >
-                                                Enter Marks
-                                            </button>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => handleExportMarks(ex)}
+                                                    className="p-2 bg-white hover:bg-slate-50 text-slate-500 hover:text-blue-600 border border-slate-200 rounded-lg transition"
+                                                    title="Download Marks PDF"
+                                                >
+                                                    📥
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        setSelectedExamForMarks(ex);
+                                                        // Initialize marks data
+                                                        const initialMarks = {};
+                                                        students.forEach(s => initialMarks[s.StudentID] = { marks: '', remarks: '' });
+                                                        
+                                                        try {
+                                                            const res = await api.get(`/academic/marks/exam/${ex.ExamID}`);
+                                                            res.data.forEach(m => {
+                                                                if (initialMarks[m.StudentID]) {
+                                                                    initialMarks[m.StudentID] = { marks: m.Marks, remarks: m.Remarks || '' };
+                                                                }
+                                                            });
+                                                        } catch (err) {
+                                                            console.error("Failed to fetch existing marks", err);
+                                                        }
+                                                        
+                                                        setMarksData(initialMarks);
+                                                    }}
+                                                    className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 border border-blue-200 rounded-lg text-sm font-bold transition"
+                                                >
+                                                    Enter Marks
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                     {exams.length === 0 && <p className="text-slate-500 text-center py-8">No exams created yet.</p>}
@@ -600,7 +684,17 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
                             )}
                         </div>
                         <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
-                            <span className="text-sm text-slate-500">Total Present: <strong className="text-slate-900">{viewSessionStudents.length}</strong></span>
+                            <div className="flex flex-col">
+                                <span className="text-sm text-slate-500">Total Present: <strong className="text-slate-900">{viewSessionStudents.length}</strong></span>
+                                {viewSessionStudents.length > 0 && (
+                                    <button 
+                                        onClick={handleExportAttendance}
+                                        className="text-xs text-blue-600 font-bold hover:underline mt-1 text-left"
+                                    >
+                                        📥 Download PDF List
+                                    </button>
+                                )}
+                            </div>
                             <button onClick={() => setViewSession(null)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded-lg font-medium transition">Close</button>
                         </div>
                     </div>
