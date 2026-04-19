@@ -18,7 +18,7 @@ const sendMessage = async (req, res) => {
     }
 };
 
-// Get Chat History
+// Get Chat History (also marks messages from contact as read)
 const getChatHistory = async (req, res) => {
     const userId = req.user.id;
     const { contactId } = req.params;
@@ -30,9 +30,9 @@ const getChatHistory = async (req, res) => {
             ORDER BY Timestamp ASC
         `, [userId, contactId, contactId, userId]);
 
-        // Mark as read: messages sent to this user from this contact
+        // Mark incoming messages from this contact as read
         await db.query(
-            "UPDATE Chat SET IsRead = TRUE WHERE SenderID = ? AND ReceiverID = ? AND IsRead = FALSE",
+            `UPDATE Chat SET IsRead = TRUE WHERE SenderID = ? AND ReceiverID = ? AND IsRead = FALSE`,
             [contactId, userId]
         );
 
@@ -96,13 +96,14 @@ const getChatContacts = async (req, res) => {
 
         const [contacts] = await db.query(query, params);
 
-        // Enhance parent contacts with student details for teachers
+        if (contacts.length === 0) return res.json([]);
+
+        // For teachers: attach the student list to each parent contact
         if (userRole === 'teacher') {
             for (let c of contacts) {
                 if (c.Role === 'parent') {
-                    // Fetch students for this parent that THIS teacher teaches
                     const [students] = await db.query(`
-                        SELECT DISTINCT st.StudentID, st.StudentName, st.Grade, st.ParentID
+                        SELECT DISTINCT st.StudentID, st.StudentName, st.Grade
                         FROM Student st
                         JOIN Enrollment e ON st.StudentID = e.StudentID
                         JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
@@ -114,7 +115,42 @@ const getChatContacts = async (req, res) => {
             }
         }
 
-        res.json(contacts);
+        // Enrich each contact with last message preview and per-contact unread count
+        const [summary] = await db.query(`
+            SELECT
+                partner_id AS ContactID,
+                MAX(Timestamp) AS LastMessageTime,
+                SUBSTRING_INDEX(GROUP_CONCAT(Message ORDER BY Timestamp DESC SEPARATOR CHAR(1)), CHAR(1), 1) AS LastMessage,
+                SUM(CASE WHEN SenderID != ? AND IsRead = FALSE THEN 1 ELSE 0 END) AS UnreadCount
+            FROM (
+                SELECT
+                    CASE WHEN SenderID = ? THEN ReceiverID ELSE SenderID END AS partner_id,
+                    Timestamp, Message, SenderID, IsRead
+                FROM Chat
+                WHERE SenderID = ? OR ReceiverID = ?
+            ) t
+            GROUP BY partner_id
+        `, [userId, userId, userId, userId]);
+
+        const summaryMap = {};
+        summary.forEach(s => { summaryMap[s.ContactID] = s; });
+
+        const enriched = contacts.map(c => ({
+            ...c,
+            LastMessage: summaryMap[c.ContactID]?.LastMessage || null,
+            LastMessageTime: summaryMap[c.ContactID]?.LastMessageTime || null,
+            UnreadCount: Number(summaryMap[c.ContactID]?.UnreadCount || 0),
+        }));
+
+        // Sort by most recent conversation first
+        enriched.sort((a, b) => {
+            if (!a.LastMessageTime) return 1;
+            if (!b.LastMessageTime) return -1;
+            return new Date(b.LastMessageTime) - new Date(a.LastMessageTime);
+        });
+
+        console.log("Contacts found:", enriched.length);
+        res.json(enriched);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Error fetching contacts" });
