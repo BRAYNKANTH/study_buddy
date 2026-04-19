@@ -60,7 +60,7 @@ const AddStudent = () => {
                 "merchant_id": merchantId,        // Return URL: where user goes after payment
                 "return_url": window.location.origin + "/parent/dashboard",
                 "cancel_url": window.location.origin + "/parent/dashboard",
-                "notify_url": "https://study-buddy-api.com/api/payments/notify", // Placeholder
+                "notify_url": `${import.meta.env.VITE_API_URL}/payments/notify`,
                 "order_id": orderId,
                 "items": "Student Registration",
                 "amount": amountFormatted, // MUST match the hashed amount string exactly

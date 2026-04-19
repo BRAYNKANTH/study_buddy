@@ -109,7 +109,7 @@ const ParentDashboard = () => {
                 "merchant_id": merchantId,
                 "return_url": window.location.origin + "/parent/dashboard",
                 "cancel_url": window.location.origin + "/parent/dashboard",
-                "notify_url": "https://study-buddy-api.com/api/payments/notify",
+                "notify_url": `${import.meta.env.VITE_API_URL}/payments/notify`,
                 "order_id": paymentId,
                 "items": `Monthly Fee - ${payMonth}`,
                 "amount": amountFormatted,
