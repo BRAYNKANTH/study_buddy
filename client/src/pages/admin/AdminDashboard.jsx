@@ -11,6 +11,7 @@ const AdminDashboard = () => {
     const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState('overview');
     const [pendingPayments, setPendingPayments] = useState([]);
+    const [stats, setStats] = useState(null);
 
     // Announcement State
     const [annTitle, setAnnTitle] = useState('');
@@ -49,9 +50,16 @@ const AdminDashboard = () => {
     const monthlyPayments = pendingPayments.filter(p => p.IsApproved);
 
     useEffect(() => {
-        // Fetch payments on mount to populate counts for all tabs
         fetchPayments();
+        fetchStats();
     }, []);
+
+    const fetchStats = async () => {
+        try {
+            const res = await api.get('/users/stats');
+            setStats(res.data);
+        } catch (err) { console.error(err); }
+    };
 
     useEffect(() => {
         if (activeTab === 'timetable') {
@@ -209,56 +217,60 @@ const AdminDashboard = () => {
 
                 {/* Content */}
                 {activeTab === 'overview' && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('tutors')}>
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
-                            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100">
-                                👨‍🏫
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Manage Users</h3>
-                            <p className="text-slate-500 relative z-10">Add or edit Tutors and Students profiles.</p>
-                        </div>
-                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('fees')}>
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/10 transition-colors"></div>
-                            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-emerald-100 relative">
-                                💰
-                                {monthlyPayments.length > 0 && (
-                                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold shadow-lg animate-bounce">
-                                        {monthlyPayments.length}
+                    <div className="space-y-6">
+
+                        {/* ── STATS BAR ── */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                            {[
+                                { label: 'Students', value: stats?.totalStudents ?? '—', icon: '🎓', color: 'blue', sub: `${stats?.approvedStudents ?? 0} active` },
+                                { label: 'Teachers', value: stats?.totalTeachers ?? '—', icon: '👨‍🏫', color: 'indigo', sub: 'teaching staff' },
+                                { label: 'Parents', value: stats?.totalParents ?? '—', icon: '👨‍👩‍👧', color: 'purple', sub: 'registered' },
+                                { label: 'Pending Fees', value: monthlyPayments.length, icon: '💰', color: 'amber', sub: 'awaiting verify', alert: monthlyPayments.length > 0 },
+                                { label: 'New Registrations', value: registrationPayments.length, icon: '📝', color: 'rose', sub: 'need approval', alert: registrationPayments.length > 0 },
+                                { label: "Today's Classes", value: stats?.todaySessions ?? '—', icon: '📅', color: 'emerald', sub: 'sessions today' },
+                            ].map((s, i) => (
+                                <div key={i} className={`bg-white border rounded-2xl p-4 flex flex-col gap-1 shadow-sm relative overflow-hidden ${s.alert ? 'border-red-200 bg-red-50/30' : 'border-slate-100'}`}>
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-2xl">{s.icon}</span>
+                                        {s.alert && <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
                                     </div>
-                                )}
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Fee Management</h3>
-                            <p className="text-slate-500 relative z-10">Verify monthly payments.</p>
+                                    <p className="text-2xl font-extrabold text-slate-900 mt-1">{s.value}</p>
+                                    <p className="text-xs font-semibold text-slate-600">{s.label}</p>
+                                    <p className="text-xs text-slate-400">{s.sub}</p>
+                                </div>
+                            ))}
                         </div>
-                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('registrations')}>
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
-                            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100 relative">
-                                📝
-                                {registrationPayments.length > 0 && (
-                                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold shadow-lg animate-bounce">
-                                        {registrationPayments.length}
+
+                        {/* ── ACTION CARDS ── */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {[
+                                { icon: '👨‍🏫', emoji_bg: 'bg-blue-50', title: 'Manage Users', desc: 'Add or edit tutors and student profiles.', tab: 'tutors', color: 'blue', badge: null },
+                                { icon: '💰', emoji_bg: 'bg-emerald-50', title: 'Fee Management', desc: 'Verify monthly fee payments.', tab: 'fees', color: 'emerald', badge: monthlyPayments.length },
+                                { icon: '📝', emoji_bg: 'bg-blue-50', title: 'Registrations', desc: 'Approve new student registrations.', tab: 'registrations', color: 'blue', badge: registrationPayments.length },
+                                { icon: '📢', emoji_bg: 'bg-violet-50', title: 'Announcements', desc: 'Post updates and news to all users.', tab: 'communication', color: 'violet', badge: null },
+                                { icon: '📚', emoji_bg: 'bg-amber-50', title: 'Manage Subjects', desc: 'Add or edit system subjects.', tab: 'subjects', color: 'amber', badge: null },
+                                { icon: '📅', emoji_bg: 'bg-slate-50', title: 'Timetable', desc: 'Schedule classes and weekly slots.', tab: 'timetable', color: 'slate', badge: null },
+                            ].map((card, i) => (
+                                <div
+                                    key={i}
+                                    onClick={() => setActiveTab(card.tab)}
+                                    className="bg-white border border-slate-100 rounded-2xl p-5 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group flex items-start gap-4 relative overflow-hidden"
+                                >
+                                    <div className={`w-12 h-12 ${card.emoji_bg} rounded-xl flex items-center justify-center text-2xl flex-shrink-0 group-hover:scale-110 transition-transform relative`}>
+                                        {card.icon}
+                                        {card.badge > 0 && (
+                                            <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold shadow animate-bounce">
+                                                {card.badge}
+                                            </span>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Registrations</h3>
-                            <p className="text-slate-500 relative z-10">Verify new student registrations.</p>
-                        </div>
-                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('communication')}>
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
-                            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100">
-                                📢
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2 relative z-10">Announcements</h3>
-                            <p className="text-slate-500 relative z-10">Post updates and news to all users.</p>
-                        </div>
-                        <div className="glass-card p-5 md:p-8 cursor-pointer hover:bg-white transition group bg-white border border-blue-100 shadow-sm hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-300 rounded-2xl relative overflow-hidden" onClick={() => setActiveTab('subjects')}>
-                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/10 transition-colors"></div>
-                            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform shadow-inner shadow-blue-100">
-                                📚
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2">Manage Subjects</h3>
-                            <p className="text-slate-500">Add or edit system subjects.</p>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-slate-900 text-base mb-0.5">{card.title}</h3>
+                                        <p className="text-sm text-slate-500 leading-snug">{card.desc}</p>
+                                    </div>
+                                    <span className="text-slate-300 group-hover:text-slate-500 group-hover:translate-x-1 transition-all text-lg flex-shrink-0">→</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}

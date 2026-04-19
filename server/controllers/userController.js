@@ -363,10 +363,29 @@ const deleteStudent = async (req, res) => {
     }
 };
 
+// Admin Stats
+const getAdminStats = async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const [[{ totalStudents }]] = await db.query("SELECT COUNT(*) as totalStudents FROM Student");
+        const [[{ totalTeachers }]] = await db.query("SELECT COUNT(*) as totalTeachers FROM User WHERE Role = 'teacher'");
+        const [[{ totalParents }]] = await db.query("SELECT COUNT(*) as totalParents FROM User WHERE Role = 'parent'");
+        const [[{ pendingPayments }]] = await db.query("SELECT COUNT(*) as pendingPayments FROM Payment WHERE Status = 'Pending'");
+        const [[{ todaySessions }]] = await db.query("SELECT COUNT(*) as todaySessions FROM Session WHERE DATE(Date) = ?", [today]);
+        const [[{ approvedStudents }]] = await db.query("SELECT COUNT(*) as approvedStudents FROM Student WHERE IsApproved = TRUE");
+
+        res.json({ totalStudents, totalTeachers, totalParents, pendingPayments, todaySessions, approvedStudents });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Error fetching stats" });
+    }
+};
+
 module.exports = {
     getAllTutors, addTutor,
     getAllParents, addParent,
     getAllStudents, addStudent, registerStudent,
     getMyChildren,
-    deleteUser, deleteStudent
+    deleteUser, deleteStudent,
+    getAdminStats
 };
