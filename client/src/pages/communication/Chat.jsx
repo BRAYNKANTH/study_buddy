@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import { Trash2, ArrowLeft } from 'lucide-react';
+import StudentDetailModal from '../../components/StudentDetailModal';
 
 const Chat = ({ initialContact, onMessageRead, isEmbedded = false, forcedContact = null }) => {
     const { user } = useAuth();
@@ -14,6 +15,7 @@ const Chat = ({ initialContact, onMessageRead, isEmbedded = false, forcedContact
     const [filterSubject, setFilterSubject] = useState('All');
     // Mobile: 'contacts' shows sidebar, 'chat' shows chat area
     const [mobileView, setMobileView] = useState(initialContact ? 'chat' : 'contacts');
+    const [viewingStudent, setViewingStudent] = useState(null);
     const chatEndRef = useRef(null);
 
     // Fetch Contacts
@@ -224,8 +226,13 @@ const Chat = ({ initialContact, onMessageRead, isEmbedded = false, forcedContact
                                     <div className="min-w-0 flex-1">
                                         <div className="font-bold text-slate-800 text-sm truncate">{contact.ContactName}</div>
                                         <div className="text-xs text-slate-500 mt-0.5 truncate">
-                                            {contact.Role}{contact.SubjectName ? ` • ${contact.SubjectName}` : ''}
+                                            {contact.Role === 'parent' ? 'Parent' : contact.Role}{contact.SubjectName ? ` • ${contact.SubjectName}` : ''}
                                         </div>
+                                        {contact.Students && contact.Students.length > 0 && (
+                                            <div className="text-[10px] text-blue-600 mt-0.5 font-bold truncate">
+                                                Child: {contact.Students.map(s => s.StudentName).join(', ')}
+                                            </div>
+                                        )}
                                     </div>
                                     <button
                                         onClick={(e) => handleDeleteChat(contact, e)}
@@ -265,6 +272,19 @@ const Chat = ({ initialContact, onMessageRead, isEmbedded = false, forcedContact
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                         Online
                                     </p>
+                                    {selectedContact.Students && selectedContact.Students.length > 0 && (
+                                        <div className="flex gap-2 mt-1 flex-wrap">
+                                            {selectedContact.Students.map(s => (
+                                                <button 
+                                                    key={s.StudentID}
+                                                    onClick={(e) => { e.stopPropagation(); setViewingStudent(s); }}
+                                                    className="text-[10px] bg-blue-50 px-2 py-0.5 rounded text-blue-600 hover:bg-blue-100 transition border border-blue-100 font-bold"
+                                                >
+                                                    View {s.StudentName}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <button
@@ -339,6 +359,14 @@ const Chat = ({ initialContact, onMessageRead, isEmbedded = false, forcedContact
                     )}
                 </div>
             </div>
+
+            {viewingStudent && (
+                <StudentDetailModal 
+                    student={viewingStudent} 
+                    onClose={() => setViewingStudent(null)} 
+                    onNavigateToChat={() => setViewingStudent(null)} 
+                />
+            )}
         </div>
     );
 };

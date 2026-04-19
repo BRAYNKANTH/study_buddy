@@ -4,6 +4,8 @@ import api from '../../api/axios';
 import QRScanner from '../../components/QRScanner';
 import StudentDetailModal from '../../components/StudentDetailModal';
 
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
 const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
     const [activeTab, setActiveTab] = useState('students');
     const [students, setStudents] = useState([]);
@@ -337,7 +339,7 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
                                         </div>
                                     </div>
                                     <a
-                                        href={`/api/academic/materials/download/${mat.FileName}`}
+                                        href={`${API_URL}/academic/materials/download/${mat.FileName}`}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="px-4 py-2 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-200 hover:border-blue-200 rounded-lg text-sm font-medium transition"

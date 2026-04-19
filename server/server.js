@@ -38,6 +38,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 
 // Routes
 app.use('/uploads', express.static('uploads'));
+app.use('/api/uploads', express.static('uploads'));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/attendance', attendanceRoutes);

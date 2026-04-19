@@ -14,7 +14,7 @@ const StudentDetailModal = ({ student, subjectId, onClose, onNavigateToChat }) =
         const fetchDetails = async () => {
             try {
                 const [attRes, resRes] = await Promise.all([
-                    api.get(`/attendance/${studentId}?subjectId=${subjectId}`),
+                    api.get(`/attendance/${studentId}${subjectId ? `?subjectId=${subjectId}` : ''}`),
                     api.get(`/academic/results/${studentId}`)
                 ]);
                 setAttendance(attRes.data);

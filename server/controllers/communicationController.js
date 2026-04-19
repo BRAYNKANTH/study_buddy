@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { createNotification } = require('./notificationController');
 
 // Send Message (Chat)
 const sendMessage = async (req, res) => {
@@ -94,6 +95,25 @@ const getChatContacts = async (req, res) => {
         }
 
         const [contacts] = await db.query(query, params);
+
+        // Enhance parent contacts with student details for teachers
+        if (userRole === 'teacher') {
+            for (let c of contacts) {
+                if (c.Role === 'parent') {
+                    // Fetch students for this parent that THIS teacher teaches
+                    const [students] = await db.query(`
+                        SELECT DISTINCT st.StudentID, st.StudentName, st.Grade, st.ParentID
+                        FROM Student st
+                        JOIN Enrollment e ON st.StudentID = e.StudentID
+                        JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
+                        JOIN TeacherSubject ts ON sg.SubjectID = ts.SubjectID
+                        WHERE st.ParentID = ? AND ts.TeacherID = ?
+                    `, [c.ContactID, userId]);
+                    c.Students = students;
+                }
+            }
+        }
+
         res.json(contacts);
     } catch (err) {
         console.error(err);
@@ -117,13 +137,43 @@ const getUnreadCount = async (req, res) => {
 
 // Create Announcement (Admin)
 const createAnnouncement = async (req, res) => {
-    const { title, content, targetGroup } = req.body;
+    const { title, content, targetAudience, grade } = req.body;
+    const adminId = req.user.id;
+    const finalTarget = targetAudience || 'All';
+    const finalGrade = grade || 'All';
 
     try {
         await db.query(
-            "INSERT INTO Announcement (Title, Content, Date) VALUES (?, ?, NOW())",
-            [title, content]
+            "INSERT INTO Announcement (AdminID, Title, Content, TargetAudience, Grade, Date) VALUES (?, ?, ?, ?, ?, NOW())",
+            [adminId, title, content, finalTarget, finalGrade]
         );
+
+        let targetUsers = [];
+        if (finalTarget === 'All') {
+            const [users] = await db.query("SELECT UserID FROM User WHERE Role IN ('teacher', 'parent')");
+            targetUsers = users.map(u => u.UserID);
+        } else if (finalTarget === 'Teachers') {
+            const [users] = await db.query("SELECT UserID FROM User WHERE Role = 'teacher'");
+            targetUsers = users.map(u => u.UserID);
+        } else if (finalTarget === 'Students') {
+            if (finalGrade === 'All') {
+                const [users] = await db.query("SELECT UserID FROM User WHERE Role = 'parent'");
+                targetUsers = users.map(u => u.UserID);
+            } else {
+                const [users] = await db.query(`
+                    SELECT DISTINCT u.UserID 
+                    FROM User u
+                    JOIN Student s ON u.UserID = s.ParentID
+                    WHERE u.Role = 'parent' AND s.Grade = ?
+                `, [finalGrade]);
+                targetUsers = users.map(u => u.UserID);
+            }
+        }
+
+        for (const uid of targetUsers) {
+            await createNotification(uid, `Announcement: ${title}`, content, 'SYSTEM');
+        }
+
         res.status(201).json({ message: "Announcement published" });
     } catch (err) {
         console.error(err);
@@ -131,12 +181,36 @@ const createAnnouncement = async (req, res) => {
     }
 };
 
-// Get Announcements (All users)
+// Get Announcements (Filtered by user)
 const getAnnouncements = async (req, res) => {
+    const userId = req.user.id;
+    const role = req.user.role;
+
     try {
-        const [announcements] = await db.query("SELECT * FROM Announcement ORDER BY Date DESC");
+        let query = "SELECT * FROM Announcement";
+        let params = [];
+
+        if (role === 'admin') {
+            query += " ORDER BY Date DESC";
+        } else if (role === 'teacher') {
+            query += " WHERE TargetAudience IN ('All', 'Teachers') ORDER BY Date DESC";
+        } else if (role === 'parent') {
+            const [children] = await db.query("SELECT Grade FROM Student WHERE ParentID = ?", [userId]);
+            const parentGrades = children.map(c => String(c.Grade));
+
+            if (parentGrades.length > 0) {
+                const gradeMarks = parentGrades.map(() => '?').join(',');
+                query += ` WHERE TargetAudience = 'All' OR (TargetAudience = 'Students' AND (Grade = 'All' OR Grade IN (${gradeMarks}))) ORDER BY Date DESC`;
+                params.push(...parentGrades);
+            } else {
+                query += " WHERE TargetAudience = 'All' OR (TargetAudience = 'Students' AND Grade = 'All') ORDER BY Date DESC";
+            }
+        }
+
+        const [announcements] = await db.query(query, params);
         res.json(announcements);
     } catch (err) {
+        console.error(err);
         res.status(500).json({ message: "Error fetching announcements" });
     }
 };
