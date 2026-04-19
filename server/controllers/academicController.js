@@ -1,5 +1,7 @@
 const db = require('../config/db');
 const path = require('path');
+const { createNotification } = require('./notificationController');
+const { sendSMS } = require('../utils/notification');
 
 // Helper to calculate Grade dynamically (Standard Sri Lankan Grading or Custom)
 const calculateGrade = (marks) => {
@@ -113,6 +115,37 @@ const enterMarks = async (req, res) => {
             );
         }
 
+        // Notify parent about mark entry/update
+        try {
+            const [examInfo] = await db.query(
+                `SELECT ex.ExamName, s.SubjectName
+                 FROM Exam ex
+                 JOIN SubjectGrade sg ON sg.SubjectGradeID = ex.SubjectGradeID
+                 JOIN Subject s ON s.SubjectID = sg.SubjectID
+                 WHERE ex.ExamID = ?`,
+                [examId]
+            );
+            const [studentInfo] = await db.query(
+                `SELECT st.ParentID, st.StudentName, pp.Phone
+                 FROM Student st
+                 LEFT JOIN ParentProfile pp ON pp.UserID = st.ParentID
+                 WHERE st.StudentID = ?`,
+                [studentId]
+            );
+            if (examInfo.length > 0 && studentInfo.length > 0) {
+                const { ExamName, SubjectName } = examInfo[0];
+                const { ParentID, StudentName, Phone } = studentInfo[0];
+                const letterGrade = calculateGrade(marks);
+                const notifMsg = `Marks updated for ${StudentName}: ${ExamName} (${SubjectName}) — ${marks} marks, Grade ${letterGrade}.`;
+                await createNotification(ParentID, 'Marks Updated', notifMsg, 'MARKS');
+                if (Phone) {
+                    await sendSMS(Phone, `StudyBuddy: ${notifMsg}`);
+                }
+            }
+        } catch (notifErr) {
+            console.error("Notification error (enterMarks):", notifErr);
+        }
+
         res.json({ message: "Marks entered successfully" });
     } catch (err) {
         console.error(err);
@@ -151,6 +184,41 @@ const enterBatchMarks = async (req, res) => {
                 );
             }
         }
+        // Notify each student's parent
+        try {
+            const [examInfo] = await db.query(
+                `SELECT ex.ExamName, s.SubjectName
+                 FROM Exam ex
+                 JOIN SubjectGrade sg ON sg.SubjectGradeID = ex.SubjectGradeID
+                 JOIN Subject s ON s.SubjectID = sg.SubjectID
+                 WHERE ex.ExamID = ?`,
+                [examId]
+            );
+            if (examInfo.length > 0) {
+                const { ExamName, SubjectName } = examInfo[0];
+                for (const data of marksData) {
+                    const [studentInfo] = await db.query(
+                        `SELECT st.ParentID, st.StudentName, pp.Phone
+                         FROM Student st
+                         LEFT JOIN ParentProfile pp ON pp.UserID = st.ParentID
+                         WHERE st.StudentID = ?`,
+                        [data.studentId]
+                    );
+                    if (studentInfo.length > 0) {
+                        const { ParentID, StudentName, Phone } = studentInfo[0];
+                        const letterGrade = calculateGrade(data.marks);
+                        const notifMsg = `Marks updated for ${StudentName}: ${ExamName} (${SubjectName}) — ${data.marks} marks, Grade ${letterGrade}.`;
+                        await createNotification(ParentID, 'Marks Updated', notifMsg, 'MARKS');
+                        if (Phone) {
+                            await sendSMS(Phone, `StudyBuddy: ${notifMsg}`);
+                        }
+                    }
+                }
+            }
+        } catch (notifErr) {
+            console.error("Notification error (enterBatchMarks):", notifErr);
+        }
+
         res.json({ message: "Batch marks updated successfully" });
     } catch (err) {
         console.error(err);
@@ -450,6 +518,33 @@ const uploadStudyMaterial = async (req, res) => {
             "INSERT INTO StudyMaterial (MaterialID, TeacherID, SubjectGradeID, Title, Description, FileName, FileType, UploadDate) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())",
             [materialId, teacherId, subjectGradeId, title, description, file.filename, fileType]
         );
+
+        // Notify parents of all students enrolled in this subject-grade
+        const [info] = await db.query(
+            `SELECT u.FullName, s.SubjectName
+             FROM User u
+             JOIN Subject s ON s.SubjectID = ?
+             WHERE u.UserID = ?`,
+            [subjectId, teacherId]
+        );
+        const teacherName = info.length > 0 ? info[0].FullName : 'Your teacher';
+        const subjectName = info.length > 0 ? info[0].SubjectName : 'a subject';
+
+        const [parents] = await db.query(
+            `SELECT DISTINCT st.ParentID
+             FROM Enrollment e
+             JOIN Student st ON st.StudentID = e.StudentID
+             WHERE e.SubjectGradeID = ?`,
+            [subjectGradeId]
+        );
+        for (const { ParentID } of parents) {
+            await createNotification(
+                ParentID,
+                'New Study Material Uploaded',
+                `Sir/Madam ${teacherName} uploaded "${title}" for ${subjectName} (Grade ${grade}).`,
+                'MATERIAL'
+            );
+        }
 
         res.status(201).json({ message: "Material uploaded successfully", materialId });
     } catch (err) {
