@@ -275,7 +275,7 @@ const getMyChildren = async (req, res) => {
 
 // Delete User (Tutor/Parent) - Cascading
 const deleteUser = async (req, res) => {
-    const { id } = req.params; // Expecting :id in route
+    const id = req.params.id || req.params.userId;
     const conn = await db.getConnection();
     try {
         await conn.beginTransaction();
