@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 /**
  * Generates a branded PDF report with a table.
@@ -80,7 +80,7 @@ export const generateReport = ({ title, filename, columns, data, studentInfo = n
     }
 
     // Build Table
-    doc.autoTable({
+    autoTable(doc, {
         startY: currentY,
         columns: columns,
         body: data,
@@ -100,11 +100,10 @@ export const generateReport = ({ title, filename, columns, data, studentInfo = n
             fillColor: [248, 250, 252]
         },
         margin: { left: margin, right: margin },
-        didDrawPage: (data) => {
-            // Footer
+        didDrawPage: () => {
             const str = `Page ${doc.internal.getNumberOfPages()}`;
             doc.setFontSize(8);
-            doc.setTextColor(148, 163, 184); // Slate-400
+            doc.setTextColor(148, 163, 184);
             doc.text(str, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
         }
     });

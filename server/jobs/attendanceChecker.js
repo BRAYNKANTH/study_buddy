@@ -29,10 +29,11 @@ const checkAbsentStudents = async () => {
     const nowSL = toSLTime(new Date());
     const todaySL = nowSL.toISOString().split('T')[0]; // YYYY-MM-DD in SL
 
-    // Window: sessions whose StartTime falls between 10 and 11 minutes ago in SL time
-    // Cron fires every minute → each session is caught exactly once in this 1-min window
-    const t4Ago = new Date(nowSL.getTime() - 11 * 60 * 1000);
-    const t3Ago = new Date(nowSL.getTime() - 10 * 60 * 1000);
+    // Window: sessions that started between 10 and 12 minutes ago (2-min window for cron jitter)
+    const t12Ago = new Date(nowSL.getTime() - 12 * 60 * 1000);
+    const t10Ago = new Date(nowSL.getTime() - 10 * 60 * 1000);
+
+    console.log(`[AttendanceChecker] Running at SL=${nowSL.toISOString()} date=${todaySL} window=${fmtTime(t12Ago)}-${fmtTime(t10Ago)}`);
 
     try {
         const [sessions] = await db.query(
@@ -44,8 +45,9 @@ const checkAbsentStudents = async () => {
              WHERE s.Date = ?
                AND s.StartTime != '00:00:00'
                AND s.StartTime BETWEEN ? AND ?`,
-            [todaySL, fmtTime(t4Ago), fmtTime(t3Ago)]
+            [todaySL, fmtTime(t12Ago), fmtTime(t10Ago)]
         );
+        console.log(`[AttendanceChecker] Sessions found: ${sessions.length}`);
 
         for (const session of sessions) {
             // Students enrolled in this subject-grade but not yet scanned
