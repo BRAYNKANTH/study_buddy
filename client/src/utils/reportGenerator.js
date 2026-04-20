@@ -13,7 +13,7 @@ import 'jspdf-autotable';
  * @param {string} [options.subtitle] - Optional subtitle (e.g., Exam Name or Date Range)
  */
 export const generateReport = ({ title, filename, columns, data, studentInfo = null, subtitle = null }) => {
-    const doc = jsPDF({
+    const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
