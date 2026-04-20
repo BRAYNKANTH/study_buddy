@@ -686,14 +686,6 @@ const ClassView = ({ subject, grade, onBack, onNavigateToChat }) => {
                         <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
                             <div className="flex flex-col">
                                 <span className="text-sm text-slate-500">Total Present: <strong className="text-slate-900">{viewSessionStudents.length}</strong></span>
-                                {viewSessionStudents.length > 0 && (
-                                    <button 
-                                        onClick={handleExportAttendance}
-                                        className="text-xs text-blue-600 font-bold hover:underline mt-1 text-left"
-                                    >
-                                        📥 Download PDF List
-                                    </button>
-                                )}
                             </div>
                             <button onClick={() => setViewSession(null)} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm rounded-lg font-medium transition">Close</button>
                         </div>

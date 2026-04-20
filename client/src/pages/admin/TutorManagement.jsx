@@ -87,17 +87,17 @@ const TutorManagement = () => {
 
     const handleSecureDelete = async () => {
         try {
-            const verifyRes = await api.post('/auth/verify-password', { password: adminPassword });
-            if (verifyRes.data.success) {
-                await api.delete(`/users/${selectedTutorId}`);
-                setDeleteModalOpen(false);
-                fetchTutors();
-                toast.success("Tutor deleted successfully.");
-            } else {
-                setVerifyError("Incorrect password");
-            }
+            await api.post('/auth/verify-password', { password: adminPassword });
+            await api.delete(`/users/${selectedTutorId}`);
+            setDeleteModalOpen(false);
+            fetchTutors();
+            toast.success("Tutor deleted successfully.");
         } catch (err) {
-            setVerifyError("Verification failed or Error deleting tutor");
+            if (err.response?.status === 401) {
+                setVerifyError("Incorrect password. Please try again.");
+            } else {
+                setVerifyError("Error deleting tutor. Please try again.");
+            }
             console.error(err);
         }
     };
