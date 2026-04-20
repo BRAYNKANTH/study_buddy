@@ -67,88 +67,88 @@ const getChatContacts = async (req, res) => {
 
     try {
         // Base query: people this user has already chatted with
-        const baseQuery = `
-            SELECT DISTINCT
-                u.UserID AS ContactID,
-                u.FullName AS ContactName,
-                CAST(u.Role AS CHAR) AS Role,
-                s.SubjectName
-            FROM Chat c
-            JOIN User u ON (c.SenderID = u.UserID OR c.ReceiverID = u.UserID)
-            LEFT JOIN TeacherSubject ts ON u.UserID = ts.TeacherID
-            LEFT JOIN Subject s ON ts.SubjectID = s.SubjectID
-            WHERE (c.SenderID = ? OR c.ReceiverID = ?)
-            AND u.UserID != ?
-        `;
-        const [baseContacts] = await db.query(baseQuery, [userId, userId, userId]);
+        let baseContacts = [];
+        try {
+            const [rows] = await db.query(`
+                SELECT DISTINCT
+                    u.UserID AS ContactID,
+                    u.FullName AS ContactName,
+                    u.Role AS Role,
+                    s.SubjectName
+                FROM Chat c
+                JOIN User u ON (c.SenderID = u.UserID OR c.ReceiverID = u.UserID)
+                LEFT JOIN TeacherSubject ts ON u.UserID = ts.TeacherID
+                LEFT JOIN Subject s ON ts.SubjectID = s.SubjectID
+                WHERE (c.SenderID = ? OR c.ReceiverID = ?)
+                AND u.UserID != ?
+            `, [userId, userId, userId]);
+            baseContacts = rows;
+            console.log(`[contacts] userId=${userId} role=${userRole} baseContacts=${rows.length}`);
+        } catch (e) {
+            console.error('[contacts] base query failed:', e.message);
+        }
 
         let discoveryContacts = [];
 
-        // Teachers: find all parents of enrolled students (via Session or TeacherSubject)
+        // Teachers: find all parents of enrolled students
         if (userRole === 'teacher') {
-            const [rows] = await db.query(`
-                SELECT DISTINCT
-                    u.UserID AS ContactID,
-                    u.FullName AS ContactName,
-                    'parent' AS Role,
-                    sub.SubjectName
-                FROM Session sess
-                JOIN SubjectGrade sg ON sess.SubjectGradeID = sg.SubjectGradeID
-                JOIN Subject sub ON sg.SubjectID = sub.SubjectID
-                JOIN Enrollment e ON sess.SubjectGradeID = e.SubjectGradeID
-                JOIN Student st ON e.StudentID = st.StudentID
-                JOIN User u ON st.ParentID = u.UserID
-                WHERE sess.TeacherID = ?
-                UNION
-                SELECT DISTINCT
-                    u.UserID AS ContactID,
-                    u.FullName AS ContactName,
-                    'parent' AS Role,
-                    sub.SubjectName
-                FROM TeacherSubject ts
-                JOIN Subject sub ON ts.SubjectID = sub.SubjectID
-                JOIN SubjectGrade sg ON sub.SubjectID = sg.SubjectID
-                JOIN Enrollment e ON sg.SubjectGradeID = e.SubjectGradeID
-                JOIN Student st ON e.StudentID = st.StudentID
-                JOIN User u ON st.ParentID = u.UserID
-                WHERE ts.TeacherID = ?
-            `, [userId, userId]);
-            discoveryContacts = rows;
+            try {
+                const [rows] = await db.query(`
+                    SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'parent' AS Role, sub.SubjectName
+                    FROM Session sess
+                    JOIN SubjectGrade sg ON sess.SubjectGradeID = sg.SubjectGradeID
+                    JOIN Subject sub ON sg.SubjectID = sub.SubjectID
+                    JOIN Enrollment e ON sess.SubjectGradeID = e.SubjectGradeID
+                    JOIN Student st ON e.StudentID = st.StudentID
+                    JOIN User u ON st.ParentID = u.UserID
+                    WHERE sess.TeacherID = ?
+                    UNION
+                    SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'parent' AS Role, sub.SubjectName
+                    FROM TeacherSubject ts
+                    JOIN Subject sub ON ts.SubjectID = sub.SubjectID
+                    JOIN SubjectGrade sg ON sub.SubjectID = sg.SubjectID
+                    JOIN Enrollment e ON sg.SubjectGradeID = e.SubjectGradeID
+                    JOIN Student st ON e.StudentID = st.StudentID
+                    JOIN User u ON st.ParentID = u.UserID
+                    WHERE ts.TeacherID = ?
+                `, [userId, userId]);
+                discoveryContacts = rows;
+                console.log(`[contacts] teacher discovery=${rows.length}`);
+            } catch (e) {
+                console.error('[contacts] teacher discovery failed:', e.message);
+            }
         }
 
-        // Parents: find all teachers of their children (via Session or TeacherSubject)
+        // Parents: find all teachers of their children
         if (userRole === 'parent') {
-            const [rows] = await db.query(`
-                SELECT DISTINCT
-                    u.UserID AS ContactID,
-                    u.FullName AS ContactName,
-                    'teacher' AS Role,
-                    sub.SubjectName
-                FROM Student st
-                JOIN Enrollment e ON st.StudentID = e.StudentID
-                JOIN Session sess ON e.SubjectGradeID = sess.SubjectGradeID
-                JOIN User u ON sess.TeacherID = u.UserID
-                JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
-                JOIN Subject sub ON sg.SubjectID = sub.SubjectID
-                WHERE st.ParentID = ?
-                UNION
-                SELECT DISTINCT
-                    u.UserID AS ContactID,
-                    u.FullName AS ContactName,
-                    'teacher' AS Role,
-                    sub.SubjectName
-                FROM Student st
-                JOIN Enrollment e ON st.StudentID = e.StudentID
-                JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
-                JOIN TeacherSubject ts ON sg.SubjectID = ts.SubjectID
-                JOIN User u ON ts.TeacherID = u.UserID
-                JOIN Subject sub ON sg.SubjectID = sub.SubjectID
-                WHERE st.ParentID = ?
-            `, [userId, userId]);
-            discoveryContacts = rows;
+            try {
+                const [rows] = await db.query(`
+                    SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'teacher' AS Role, sub.SubjectName
+                    FROM Student st
+                    JOIN Enrollment e ON st.StudentID = e.StudentID
+                    JOIN Session sess ON e.SubjectGradeID = sess.SubjectGradeID
+                    JOIN User u ON sess.TeacherID = u.UserID
+                    JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
+                    JOIN Subject sub ON sg.SubjectID = sub.SubjectID
+                    WHERE st.ParentID = ?
+                    UNION
+                    SELECT DISTINCT u.UserID AS ContactID, u.FullName AS ContactName, 'teacher' AS Role, sub.SubjectName
+                    FROM Student st
+                    JOIN Enrollment e ON st.StudentID = e.StudentID
+                    JOIN SubjectGrade sg ON e.SubjectGradeID = sg.SubjectGradeID
+                    JOIN TeacherSubject ts ON sg.SubjectID = ts.SubjectID
+                    JOIN User u ON ts.TeacherID = u.UserID
+                    JOIN Subject sub ON sg.SubjectID = sub.SubjectID
+                    WHERE st.ParentID = ?
+                `, [userId, userId]);
+                discoveryContacts = rows;
+                console.log(`[contacts] parent discovery=${rows.length}`);
+            } catch (e) {
+                console.error('[contacts] parent discovery failed:', e.message);
+            }
         }
 
-        // Merge: base chat contacts + discovery contacts, deduplicated by ContactID
+        // Merge and deduplicate by ContactID
         const seen = new Set();
         const contacts = [];
         for (const c of [...baseContacts, ...discoveryContacts]) {
@@ -157,6 +157,7 @@ const getChatContacts = async (req, res) => {
                 contacts.push(c);
             }
         }
+        console.log(`[contacts] final merged count=${contacts.length}`);
 
         if (contacts.length === 0) return res.json([]);
 
