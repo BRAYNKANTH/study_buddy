@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { validateEmail } from '../utils/validation';
 import { Eye, EyeOff } from 'lucide-react';
@@ -11,13 +11,11 @@ const Login = () => {
     const navigate = useNavigate();
 
     // Already logged in — replace /login in history with their dashboard
-    // (replace:true removes /login from history so back button never returns here)
     if (user) {
         const dest = user.role === 'admin' ? '/admin/dashboard'
                    : user.role === 'teacher' ? '/tutor/dashboard'
                    : '/parent/dashboard';
-        navigate(dest, { replace: true });
-        return null;
+        return <Navigate to={dest} replace />;
     }
 
     // Default form data without role
