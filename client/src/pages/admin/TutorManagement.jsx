@@ -20,7 +20,7 @@ const TutorManagement = () => {
     // Secure Delete State
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedTutorId, setSelectedTutorId] = useState(null);
-    const [adminPassword, setAdminPassword] = useState('');
+    const [confirmText, setConfirmText] = useState('');
     const [verifyError, setVerifyError] = useState('');
 
     useEffect(() => {
@@ -81,23 +81,22 @@ const TutorManagement = () => {
     const initiateDelete = (tutorId) => {
         setSelectedTutorId(tutorId);
         setDeleteModalOpen(true);
-        setAdminPassword('');
+        setConfirmText('');
         setVerifyError('');
     };
 
     const handleSecureDelete = async () => {
+        if (confirmText !== 'DELETE') {
+            setVerifyError('Type DELETE (all caps) to confirm.');
+            return;
+        }
         try {
-            await api.post('/auth/verify-password', { password: adminPassword });
             await api.delete(`/users/${selectedTutorId}`);
             setDeleteModalOpen(false);
             fetchTutors();
             toast.success("Tutor deleted successfully.");
         } catch (err) {
-            if (err.response?.status === 401) {
-                setVerifyError("Incorrect password. Please try again.");
-            } else {
-                setVerifyError("Error deleting tutor. Please try again.");
-            }
+            setVerifyError("Error deleting tutor. Please try again.");
             console.error(err);
         }
     };
@@ -213,14 +212,14 @@ const TutorManagement = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
                     <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-2xl w-full max-w-md animate-fade-in-up">
                         <h3 className="text-xl font-bold text-slate-900 mb-2">Confirm Tutor Deletion</h3>
-                        <p className="text-slate-500 mb-6">This action cannot be undone. Please enter your admin password to confirm.</p>
+                        <p className="text-slate-500 mb-4">This action cannot be undone. Type <strong className="text-red-600">DELETE</strong> to confirm.</p>
 
                         <input
-                            type="password"
-                            value={adminPassword}
-                            onChange={(e) => setAdminPassword(e.target.value)}
-                            className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 mb-2 focus:ring-2 focus:ring-red-500 outline-none transition"
-                            placeholder="Admin Password"
+                            type="text"
+                            value={confirmText}
+                            onChange={(e) => setConfirmText(e.target.value)}
+                            className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 mb-2 focus:ring-2 focus:ring-red-500 outline-none transition font-mono tracking-widest"
+                            placeholder="DELETE"
                             autoFocus
                         />
                         {verifyError && <p className="text-red-500 text-sm mb-4">{verifyError}</p>}
